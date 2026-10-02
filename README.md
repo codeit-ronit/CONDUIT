@@ -27,10 +27,10 @@ architecture.
 
 ## Current status
 
-**Stage 0: executable foundation.** The TypeScript workspace, exact `Money` value,
-runtime money contract, invariant tests, and domain dependency guard are implemented.
-Docker, PostgreSQL 18.6, transactional migrations, connection pooling, and live database
-tests are operational. No commerce or AI workflow exists yet.
+**Phase 1: deterministic commerce walking skeleton.** The foundation plus tenant-aware
+merchants, versioned catalog prices, inventory, server-priced carts, transactional
+modelled orders, and immutable receipt snapshots are operational. No AI or real payment
+workflow exists yet.
 
 ## Local setup
 
@@ -39,6 +39,7 @@ pnpm install
 cp .env.example .env
 pnpm db:setup
 pnpm check
+pnpm demo:commerce
 ```
 
 On macOS, Docker Desktop or Docker CLI with Colima may provide the Docker engine. See

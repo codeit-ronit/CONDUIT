@@ -34,7 +34,7 @@ describe("PostgreSQL foundation", () => {
     expect(result.rows[0]?.setting).toBe("180006");
   });
 
-  it("applies the database foundation migration exactly once", async () => {
+  it("applies every database migration exactly once", async () => {
     const schema = await pool.query<ExistsRow>(
       "SELECT EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'conduit') AS exists",
     );
@@ -47,7 +47,7 @@ describe("PostgreSQL foundation", () => {
 
     expect(schema.rows[0]?.exists).toBe(true);
     expect(extension.rows[0]?.exists).toBe(true);
-    expect(migrations.rows[0]?.count).toBe("1");
+    expect(migrations.rows[0]?.count).toBe("2");
   });
 
   it("rolls back an incomplete transaction without leaving state", async () => {

@@ -70,6 +70,10 @@ operational.
 
 ## Phase 1 — deterministic commerce walking skeleton
 
+**Status: complete on 2026-10-02.** Multi-tenant merchant/catalog storage, versioned
+prices, inventory, server-priced mutable carts, transactional modelled commit, immutable
+order snapshots, a deterministic demo, and live PostgreSQL acceptance tests are working.
+
 **Build**
 
 - Tenant-aware merchant and catalog records, versioned prices, explicit product
@@ -219,6 +223,5 @@ commerce bugs.
 
 ## Immediate next step
 
-Begin Phase 1 with tenant and merchant identity contracts plus their PostgreSQL schema.
-Then build the smallest versioned catalog slice that proves tenant isolation, price
-history, and explicit structured product attributes before introducing any API or agent.
+Begin Phase 2 with typed spending authorization, an append-only drawdown ledger, pure
+policy decisions, stock reservation, idempotency keys, and the ordered commit gate.

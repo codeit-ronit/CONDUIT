@@ -1,0 +1,19 @@
+{
+  "name": "@conduit/walking-skeleton",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "demo": "tsx src/main.ts",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@conduit/application": "workspace:*",
+    "@conduit/contracts": "workspace:*",
+    "@conduit/infrastructure": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "4.23.15"
+  }
+}

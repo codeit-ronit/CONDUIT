@@ -5,3 +5,4 @@ evidence, and limits.
 
 1. [Phase 0: Money and contracts](PHASE-0-MONEY-AND-CONTRACTS.md)
 2. [Phase 0: Docker, PostgreSQL, and migrations](PHASE-0-DATABASE.md)
+3. [Phase 1: Commerce walking skeleton](PHASE-1-COMMERCE-WALKING-SKELETON.md)

@@ -18,6 +18,7 @@
     "db:setup": "pnpm db:up && pnpm db:check",
     "db:shell": "docker compose exec postgres psql -U conduit -d conduit",
     "db:up": "docker compose up -d --wait postgres",
+    "demo:commerce": "dotenv -e .env -- pnpm --filter @conduit/walking-skeleton demo",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

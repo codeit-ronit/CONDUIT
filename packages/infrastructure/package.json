@@ -13,9 +13,12 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@conduit/application": "workspace:*",
+    "@conduit/domain": "workspace:*",
     "pg": "8.23.1"
   },
   "devDependencies": {
+    "@conduit/contracts": "workspace:*",
     "@types/pg": "8.23.1",
     "node-pg-migrate": "9.0.0"
   }

@@ -123,3 +123,46 @@ migrations, migration validation, and the first catalog vertical slice.
 
 Begin Phase 1 with tenant and merchant identities, then a versioned catalog repository
 and the first end-to-end catalog API slice.
+
+## 2026-10-02 — Phase 1: deterministic commerce walking skeleton
+
+### What we built
+
+- Branded tenant, merchant, product, cart, and order identifiers plus closed commerce
+  error codes.
+- Strict tenant/merchant/product/cart input contracts that reject unknown fields.
+- Multi-tenant PostgreSQL tables with composite ownership constraints.
+- Products with structured attributes, isolated merchant prose, stock, and non-
+  overwriting price history.
+- Server-priced carts with create, add, update, remove, read, and commit operations.
+- A transactionally committed MODELLED order with inventory decrement and immutable
+  order-line price snapshots.
+- A deterministic provider seam and runnable `pnpm demo:commerce` flow.
+
+### Evidence
+
+- The pure suite passes 31 tests across five files.
+- The live PostgreSQL suite passes eight tests across database and commerce scenarios.
+- Two merchants can use the same SKU, while cross-tenant/cart access is refused.
+- Two concurrent commits return one order and decrement stock once.
+- Insufficient stock rolls the whole commit back.
+- Later catalog repricing cannot change the committed receipt.
+- The demo bought four ₹199.00 items for an exact server total of ₹796.00 and labelled
+  the result MODELLED.
+
+### Important lesson
+
+JavaScript millisecond time was not precise enough to close a PostgreSQL microsecond
+price interval safely. Moving close/open into one SQL statement with one database time
+fixed the invariant at the layer that enforces it.
+
+### Limits
+
+This is commerce correctness, not yet financial authorization. There is no mandate,
+policy engine, audit chain, real provider, outbox, payment reconciliation, HTTP/MCP
+surface, or AI buyer.
+
+### Next action
+
+Build Phase 2's trust kernel: typed spending authorization, append-only drawdown ledger,
+pure policy decisions, stock reservation, idempotency key, and the ordered commit gate.
