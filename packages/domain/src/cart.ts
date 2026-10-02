@@ -1,7 +1,7 @@
 import type { CartId, MerchantId, ProductId, TenantId } from "./identifiers.js";
 import { Money } from "./money.js";
 
-export type CartStatus = "OPEN" | "COMMITTED";
+export type CartStatus = "OPEN" | "COMMITTING" | "COMMITTED";
 
 export interface PricedCartLine {
   readonly productId: ProductId;

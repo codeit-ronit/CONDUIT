@@ -8,6 +8,8 @@ export default tseslint.config(
       "vitest.config.mts",
       "vitest.integration.config.mts",
       "db/migrations/**/*.cjs",
+      "apps/trust-demo/public/app.js",
+      "packages/infrastructure/scripts/check-test-database.mjs",
       "**/dist/**",
       "**/coverage/**",
       "**/node_modules/**",

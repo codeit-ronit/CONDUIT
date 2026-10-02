@@ -95,6 +95,11 @@ commerce bugs.
 
 ## Phase 2 — the trust kernel
 
+**Status: complete on 2026-10-02.** Typed grants, pure policy decisions, append-only
+drawdown, stock/spend reservations, operation idempotency, durable provider outbox,
+unknown-state reconciliation, stale-worker recovery, isolated database testing, and a
+live six-scenario Trust Lab are operational with a MODELLED provider.
+
 **Build**
 
 - Typed authorization grant: tenant, buyer, merchant, currency, maximum amount, allowed
@@ -223,5 +228,5 @@ commerce bugs.
 
 ## Immediate next step
 
-Begin Phase 2 with typed spending authorization, an append-only drawdown ledger, pure
-policy decisions, stock reservation, idempotency keys, and the ordered commit gate.
+Begin Phase 3 with the single enforcement interceptor and a gapless, hash-chained audit
+record. Extend the Trust Lab so every proposed tool call visibly crosses that boundary.

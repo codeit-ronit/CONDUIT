@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Interactive CONDUIT trust-kernel demonstration" />
+    <title>CONDUIT Trust Lab</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="CONDUIT home">
+        <span class="brand-mark">C</span>
+        <span>CONDUIT</span>
+      </a>
+      <div class="top-meta">
+        <span class="status-dot"></span>
+        Local PostgreSQL
+        <span class="claim">MODELLED</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">PHASE 02 · INTERACTIVE BUILD</p>
+          <h1>See the trust boundary<br />make its decision.</h1>
+          <p class="hero-copy">
+            The agent can suggest a purchase. CONDUIT independently decides whether that
+            purchase is allowed—and makes every safety gate visible.
+          </p>
+        </div>
+        <div class="hero-orbit" aria-hidden="true">
+          <div class="orbit-ring ring-one"></div>
+          <div class="orbit-ring ring-two"></div>
+          <div class="core">TRUST<br />KERNEL</div>
+          <span class="node n1">QUOTE</span>
+          <span class="node n2">POLICY</span>
+          <span class="node n3">LEDGER</span>
+        </div>
+      </section>
+
+      <section class="evolution" aria-labelledby="evolution-title">
+        <div class="section-heading">
+          <p class="eyebrow">WHAT IMPROVED</p>
+          <h2 id="evolution-title">The system grows in layers</h2>
+        </div>
+        <div class="phase-track">
+          <article class="phase-card done">
+            <span class="phase-number">01</span>
+            <div>
+              <h3>Commerce skeleton</h3>
+              <p>Server prices · inventory · carts · immutable receipts</p>
+            </div>
+            <span class="phase-state">BUILT</span>
+          </article>
+          <div class="phase-arrow">→</div>
+          <article class="phase-card active">
+            <span class="phase-number">02</span>
+            <div>
+              <h3>Trust kernel</h3>
+              <p>Authorization · policy · ledger · safe provider recovery</p>
+            </div>
+            <span class="phase-state">NOW</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="lab" aria-labelledby="lab-title">
+        <aside class="scenario-panel">
+          <div class="section-heading">
+            <p class="eyebrow">SCENARIO LAB</p>
+            <h2 id="lab-title">Try the hard cases</h2>
+            <p>
+              Each run creates fresh isolated data and uses the real database workflow.
+            </p>
+          </div>
+          <div class="scenario-list" role="list">
+            <button class="scenario active" data-scenario="authorized">
+              <span class="scenario-icon">✓</span>
+              <span><strong>Authorized purchase</strong><small>Happy path</small></span>
+            </button>
+            <button class="scenario" data-scenario="wrong-arithmetic">
+              <span class="scenario-icon">≠</span>
+              <span
+                ><strong>Wrong arithmetic</strong
+                ><small>Deny before effects</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="price-change">
+              <span class="scenario-icon">↗</span>
+              <span><strong>Price changed</strong><small>Ask for approval</small></span>
+            </button>
+            <button class="scenario" data-scenario="limit-exceeded">
+              <span class="scenario-icon">₹</span>
+              <span
+                ><strong>Limit exceeded</strong><small>Enforce the grant</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="provider-unknown">
+              <span class="scenario-icon">?</span>
+              <span
+                ><strong>Provider timeout</strong
+                ><small>Reconcile, don't retry</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="idempotent-replay">
+              <span class="scenario-icon">1×</span>
+              <span
+                ><strong>Duplicate request</strong
+                ><small>Exactly one effect</small></span
+              >
+            </button>
+          </div>
+          <button id="run-button" class="run-button">
+            Run authorized purchase <span>→</span>
+          </button>
+        </aside>
+
+        <section class="result-panel" aria-live="polite">
+          <div id="empty-state" class="empty-state">
+            <div class="empty-grid"></div>
+            <span class="play">▶</span>
+            <h3>Choose a scenario and run it</h3>
+            <p>
+              You will see the claimed quote, every policy gate, and durable database
+              evidence.
+            </p>
+          </div>
+          <div id="loading-state" class="loading-state hidden">
+            <div class="scanner"></div>
+            <p>Running the real transaction…</p>
+          </div>
+          <div id="result" class="hidden"></div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <span>CONDUIT V1 · LOCAL DEVELOPMENT</span>
+      <span>Every external effect in this demo is explicitly MODELLED.</span>
+    </footer>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

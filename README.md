@@ -27,10 +27,10 @@ architecture.
 
 ## Current status
 
-**Phase 1: deterministic commerce walking skeleton.** The foundation plus tenant-aware
-merchants, versioned catalog prices, inventory, server-priced carts, transactional
-modelled orders, and immutable receipt snapshots are operational. No AI or real payment
-workflow exists yet.
+**Phase 2: trust kernel.** Typed spending grants, pure policy decisions, append-only
+drawdown, stock/spend reservations, idempotent commits, a durable provider outbox,
+unknown-state reconciliation, and an interactive browser lab are operational. Payment
+remains explicitly MODELLED; no real money moves.
 
 ## Local setup
 
@@ -41,6 +41,15 @@ pnpm db:setup
 pnpm check
 pnpm demo:commerce
 ```
+
+For the visual phase-by-phase demo:
+
+```bash
+pnpm demo:web
+```
+
+Then open <http://127.0.0.1:4310>. Try safe purchase, wrong arithmetic, price movement,
+limit enforcement, provider uncertainty, and duplicate-request scenarios.
 
 On macOS, Docker Desktop or Docker CLI with Colima may provide the Docker engine. See
 the [database learning note](docs/learning/PHASE-0-DATABASE.md) for the mental model and

@@ -33,6 +33,28 @@ importers:
         specifier: 5.0.3
         version: 5.0.3(@types/node@26.6.4)(vite@8.3.2(@types/node@26.6.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
+  apps/trust-demo:
+    dependencies:
+      '@conduit/application':
+        specifier: workspace:*
+        version: link:../../packages/application
+      '@conduit/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@conduit/domain':
+        specifier: workspace:*
+        version: link:../../packages/domain
+      '@conduit/infrastructure':
+        specifier: workspace:*
+        version: link:../../packages/infrastructure
+    devDependencies:
+      '@types/node':
+        specifier: 26.6.4
+        version: 26.6.4
+      tsx:
+        specifier: 4.23.15
+        version: 4.23.15
+
   apps/walking-skeleton:
     dependencies:
       '@conduit/application':

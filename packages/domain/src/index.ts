@@ -10,11 +10,34 @@ export type {
 } from "./catalog.js";
 export { calculateCartTotal, calculateLineTotal } from "./cart.js";
 export type { CartStatus, PricedCart, PricedCartLine } from "./cart.js";
-export { cartId, merchantId, orderId, productId, tenantId } from "./identifiers.js";
+export {
+  authorizationGrantId,
+  buyerId,
+  cartId,
+  merchantId,
+  orderId,
+  productId,
+  purchaseOperationId,
+  tenantId,
+} from "./identifiers.js";
 export type {
+  AuthorizationGrantId,
+  BuyerId,
   CartId,
   MerchantId,
   OrderId,
   ProductId,
+  PurchaseOperationId,
   TenantId,
 } from "./identifiers.js";
+export { calculateAuthorizationExposure, evaluatePurchasePolicy } from "./trust.js";
+export type {
+  AuthorizationGrant,
+  DrawdownEntry,
+  DrawdownEntryType,
+  PolicyDecision,
+  PolicyReasonCode,
+  PurchasePolicyContext,
+  PurchaseQuote,
+  PurchaseQuoteLine,
+} from "./trust.js";

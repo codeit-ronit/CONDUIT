@@ -11,6 +11,9 @@ export type MerchantId = BrandedIdentifier<"MerchantId">;
 export type ProductId = BrandedIdentifier<"ProductId">;
 export type CartId = BrandedIdentifier<"CartId">;
 export type OrderId = BrandedIdentifier<"OrderId">;
+export type BuyerId = BrandedIdentifier<"BuyerId">;
+export type AuthorizationGrantId = BrandedIdentifier<"AuthorizationGrantId">;
+export type PurchaseOperationId = BrandedIdentifier<"PurchaseOperationId">;
 
 const UUID =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu;
@@ -33,6 +36,18 @@ export function cartId(value: string): CartId {
 
 export function orderId(value: string): OrderId {
   return identifier(value, "order") as OrderId;
+}
+
+export function buyerId(value: string): BuyerId {
+  return identifier(value, "buyer") as BuyerId;
+}
+
+export function authorizationGrantId(value: string): AuthorizationGrantId {
+  return identifier(value, "authorization grant") as AuthorizationGrantId;
+}
+
+export function purchaseOperationId(value: string): PurchaseOperationId {
+  return identifier(value, "purchase operation") as PurchaseOperationId;
 }
 
 function identifier(value: string, kind: string): string {

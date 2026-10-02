@@ -10,7 +10,7 @@
   "scripts": {
     "build": "pnpm -r build",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "db:check": "pnpm db:migrate && pnpm db:migrate && pnpm test:integration",
+    "db:check": "dotenv -e .env -- pnpm --filter @conduit/infrastructure exec node scripts/check-test-database.mjs",
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f postgres",
     "db:migrate": "dotenv -e .env -- pnpm --filter @conduit/infrastructure db:migrate",
@@ -19,11 +19,13 @@
     "db:shell": "docker compose exec postgres psql -U conduit -d conduit",
     "db:up": "docker compose up -d --wait postgres",
     "demo:commerce": "dotenv -e .env -- pnpm --filter @conduit/walking-skeleton demo",
+    "demo:web": "dotenv -e .env -- pnpm --filter @conduit/trust-demo start",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:integration": "dotenv -e .env -- vitest run --config vitest.integration.config.mts",
+    "test:integration": "pnpm db:check",
+    "test:integration:raw": "vitest run --config vitest.integration.config.mts",
     "test:watch": "vitest",
     "typecheck": "pnpm -r typecheck"
   },

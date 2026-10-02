@@ -22,3 +22,13 @@ export type {
   CreateTenantInput,
   SetCartLineInput,
 } from "./commerce-contracts.js";
+export {
+  createAuthorizationGrantSchema,
+  createBuyerSchema,
+  trustedCommitSchema,
+} from "./trust-contracts.js";
+export type {
+  CreateAuthorizationGrantInput,
+  CreateBuyerInput,
+  TrustedCommitInput,
+} from "./trust-contracts.js";

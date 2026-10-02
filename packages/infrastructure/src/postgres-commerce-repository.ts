@@ -71,7 +71,7 @@ interface CartHeaderRow extends QueryResultRow {
   readonly id: string;
   readonly tenant_id: string;
   readonly merchant_id: string;
-  readonly status: "OPEN" | "COMMITTED";
+  readonly status: "OPEN" | "COMMITTING" | "COMMITTED";
   readonly currency: string;
 }
 
@@ -389,6 +389,12 @@ export class PostgresCommerceRepository implements CommerceRepository {
       }
       if (header.status === "COMMITTED") {
         return this.getOrderByCart(client, scopedTenantId, scopedCartId);
+      }
+      if (header.status === "COMMITTING") {
+        throw new CommerceError(
+          "CART_NOT_OPEN",
+          "Cart is being processed by the trusted commit workflow",
+        );
       }
 
       const lineResult = await client.query<CartLineRow>(

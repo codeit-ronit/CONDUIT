@@ -10,6 +10,7 @@ changes, add a new ADR that supersedes the old one.
 | [ADR-0002](decisions/ADR-0002-modular-monolith.md)                      | TypeScript modular monolith for V1           | Accepted | One language and transactional simplicity while boundaries remain explicit |
 | [ADR-0003](decisions/ADR-0003-canonical-domain-and-adapters.md)         | Stable internal model; protocols at adapters | Accepted | External specifications can evolve without rewriting core rules            |
 | [ADR-0004](decisions/ADR-0004-versioned-catalog-and-order-snapshots.md) | Version prices and snapshot orders           | Accepted | Price changes remain explainable and cannot rewrite old receipts           |
+| [ADR-0005](decisions/ADR-0005-durable-trusted-commit.md)                | Durable trusted commit and provider outbox   | Accepted | Crashes and ambiguous provider results recover without duplicate effects   |
 
 ## Short-form product decisions
 

@@ -166,3 +166,54 @@ surface, or AI buyer.
 
 Build Phase 2's trust kernel: typed spending authorization, append-only drawdown ledger,
 pure policy decisions, stock reservation, idempotency key, and the ordered commit gate.
+
+## 2026-10-02 — Phase 2: trust kernel and live Trust Lab
+
+### What we built
+
+- Typed buyer grants covering tenant, merchant, currency, cumulative amount,
+  category/SKU scope, expiry, revocation, and policy version.
+- A pure `ALLOW` / `DENY` / `REQUIRE_APPROVAL` policy engine with stable reasons,
+  explanations, and recovery actions.
+- Claimed-versus-live itemized quote comparison that separates wrong arithmetic from a
+  real catalog price change.
+- Append-only drawdown and transactional stock/spending reservations.
+- Tenant-scoped operation keys that replay concurrent duplicate commits as one result.
+- A durable provider outbox with worker leases, stale-claim recovery, definite-release
+  handling, `PAYMENT_UNKNOWN`, and lookup-before-retry reconciliation.
+- An isolated `conduit_test` database so test resets never erase normal demo data.
+- A browser Trust Lab with six PostgreSQL scenarios and visible phase comparison, policy
+  gates, quotes, ledger, stock, order, and outbox evidence.
+
+### What we learned
+
+- “Timeout” is not the same as “failure.” Unknown must remain a first-class state until
+  the provider is queried.
+- Idempotency needs both a database identity and provider identity. One without the
+  other leaves a duplicate-effect gap.
+- A durable outbox still needs a claim lease; otherwise a worker crash can strand a
+  `PROCESSING` row forever.
+- Testing infrastructure is product safety. A safety review stopped the old broad
+  database reset, so integration tests now use their own disposable database.
+- A useful live demo exposes intermediate states and evidence, not only a final receipt.
+
+### Evidence
+
+- `pnpm check` passes formatting, linting, strict type checking, 37 pure tests, and all
+  package builds.
+- `pnpm db:check` applies all migrations twice and passes 14 live PostgreSQL tests.
+- Every Trust Lab scenario was executed against the local PostgreSQL container.
+- The ambiguous-payment scenario showed `PAYMENT_UNKNOWN` and reconciled to `CONFIRMED`
+  through lookup without a second authorization attempt.
+
+### Limits
+
+- Payments remain MODELLED; no production provider or real money is used.
+- The ledger supports `REVERSE`, but a user-facing refund workflow is not exposed.
+- Authentication, hash-chained audit, tool interception, and the AI buyer are later
+  phases.
+
+### Next action
+
+Build Phase 3's enforcement boundary and tamper-evident audit trail, then show every
+proposed tool call and its decision in the same Trust Lab.
