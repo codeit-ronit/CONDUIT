@@ -43,6 +43,10 @@ imports a web framework, database, model SDK, or payment SDK.
 
 ## Phase 0 — foundation and executable contracts
 
+**Status: complete on 2026-10-02.** The toolchain, exact money/contracts, PostgreSQL
+18.6 environment, transactional migrations, live integration tests, and CI gate are
+operational.
+
 **Build**
 
 - Workspace, formatter, linter, type checker, unit test runner, CI, and conventional
@@ -215,6 +219,6 @@ commerce bugs.
 
 ## Immediate next step
 
-Implement Phase 0 only. Before installing dependencies, verify the local Node, pnpm,
-Docker/PostgreSQL, and Git environment. Then scaffold the smallest workspace that can
-prove the domain package is independent and `Money` is safe.
+Begin Phase 1 with tenant and merchant identity contracts plus their PostgreSQL schema.
+Then build the smallest versioned catalog slice that proves tenant isolation, price
+history, and explicit structured product attributes before introducing any API or agent.

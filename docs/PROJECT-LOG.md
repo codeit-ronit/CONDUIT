@@ -82,3 +82,44 @@ replaced with a different database that would weaken our architecture evidence.
 
 Enable a local PostgreSQL environment, then add tenant/merchant identifiers, database
 migrations, migration validation, and the first catalog vertical slice.
+
+## 2026-10-02 — Phase 0B: Docker and PostgreSQL foundation
+
+### What we built
+
+- Installed Docker CLI 29.8.2, Docker Compose 5.5.1, and Colima 0.10.3 after Docker
+  Desktop's DMG failed to mount on macOS.
+- Started and verified a Docker 29.5.2 Linux engine with the ARM64 `hello-world` image.
+- Added a PostgreSQL 18.6 Compose service bound only to localhost, with a health check
+  and persistent named volume.
+- Added versioned, locked, transactional migrations and a dedicated `conduit` schema.
+- Added a bounded PostgreSQL connection pool and production configuration guard.
+- Added live integration tests and CI database verification.
+
+### What we learned
+
+- Installing a Docker client does not prove a daemon exists. A real disposable container
+  is the useful verification.
+- Container health and process start are different events. Migrations wait for
+  `pg_isready`, rather than racing PostgreSQL initialization.
+- A named volume outlives replaceable containers; normal shutdown must not destroy it.
+- Migration idempotency is observable: the first run applied one migration and later
+  runs applied none.
+- The down path removed the schema/extension and the up path rebuilt them before all
+  integration tests passed again.
+- A first database test queried `SHOW server_version_num` but assumed the result column
+  was named `setting`. We replaced that assumption with an explicit SQL alias and reran
+  the live test.
+
+### Evidence
+
+- PostgreSQL returned `server_version_num = 180006`.
+- The `conduit` schema, `pgcrypto` extension, and one migration record were verified.
+- A probe table created inside a transaction did not exist after rollback.
+- The unit suite remains separate from database integration tests, so the pure domain
+  does not acquire an infrastructure dependency.
+
+### Next action
+
+Begin Phase 1 with tenant and merchant identities, then a versioned catalog repository
+and the first end-to-end catalog API slice.

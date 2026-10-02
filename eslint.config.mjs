@@ -6,6 +6,8 @@ export default tseslint.config(
     ignores: [
       "eslint.config.mjs",
       "vitest.config.mts",
+      "vitest.integration.config.mts",
+      "db/migrations/**/*.cjs",
       "**/dist/**",
       "**/coverage/**",
       "**/node_modules/**",

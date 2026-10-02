@@ -1,6 +1,6 @@
 # ADR-0002: TypeScript modular monolith for V1
 
-- **Status:** Partially accepted; TypeScript validated, PostgreSQL pending
+- **Status:** Accepted
 - **Date:** 2026-10-02
 
 ## Context
@@ -28,6 +28,5 @@ network boundaries between domain modules in V1.
 ## Validation note
 
 The TypeScript 6, pnpm workspace, strict lint/type/test, package-boundary, and CI parts
-were validated on 2026-10-02. PostgreSQL could not yet be validated because neither
-Docker nor `psql` is installed locally. The database part remains proposed until
-migration and transaction tests run.
+were validated on 2026-10-02. PostgreSQL 18.6 was then started through Docker/Colima;
+repeatable migrations and transaction rollback were verified against the live server.

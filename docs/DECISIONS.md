@@ -7,7 +7,7 @@ changes, add a new ADR that supersedes the old one.
 | ID                                                              | Decision                                     | Status   | Why it helps                                                               |
 | --------------------------------------------------------------- | -------------------------------------------- | -------- | -------------------------------------------------------------------------- |
 | [ADR-0001](decisions/ADR-0001-rebuild-principles.md)            | Rebuild around a deterministic trust kernel  | Accepted | Preserves the proven idea without copying old structure                    |
-| [ADR-0002](decisions/ADR-0002-modular-monolith.md)              | TypeScript modular monolith for V1           | Proposed | One language and transactional simplicity while boundaries remain explicit |
+| [ADR-0002](decisions/ADR-0002-modular-monolith.md)              | TypeScript modular monolith for V1           | Accepted | One language and transactional simplicity while boundaries remain explicit |
 | [ADR-0003](decisions/ADR-0003-canonical-domain-and-adapters.md) | Stable internal model; protocols at adapters | Accepted | External specifications can evolve without rewriting core rules            |
 
 ## Short-form product decisions

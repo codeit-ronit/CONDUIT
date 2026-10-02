@@ -2,6 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    exclude: ["**/node_modules/**", "**/dist/**", "**/*.integration.test.ts"],
+    fileParallelism: false,
+    include: ["**/*.integration.test.ts"],
   },
 });

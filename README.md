@@ -29,8 +29,21 @@ architecture.
 
 **Stage 0: executable foundation.** The TypeScript workspace, exact `Money` value,
 runtime money contract, invariant tests, and domain dependency guard are implemented.
-The local PostgreSQL foundation is pending because Docker/PostgreSQL is not installed.
-No commerce or AI workflow exists yet.
+Docker, PostgreSQL 18.6, transactional migrations, connection pooling, and live database
+tests are operational. No commerce or AI workflow exists yet.
+
+## Local setup
+
+```bash
+pnpm install
+cp .env.example .env
+pnpm db:setup
+pnpm check
+```
+
+On macOS, Docker Desktop or Docker CLI with Colima may provide the Docker engine. See
+the [database learning note](docs/learning/PHASE-0-DATABASE.md) for the mental model and
+all database commands.
 
 ## The three rules to remember
 
