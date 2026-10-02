@@ -14,9 +14,9 @@ This project optimizes for correctness and understanding, not commit volume.
 
 ## Before a commit
 
-Run the repository check command (to be added in Phase 0). It will cover
-formatting, linting, type checking, tests, migrations, and dependency rules.
-Until then, use `git diff --check` and review the staged diff.
+Run the repository check command (to be added in Phase 0). It will cover formatting,
+linting, type checking, tests, migrations, and dependency rules. Until then, use
+`git diff --check` and review the staged diff.
 
 ## What a pull request must explain
 
@@ -30,10 +30,10 @@ Until then, use `git diff --check` and review the staged diff.
 
 - Update `docs/PROJECT-LOG.md` for each completed slice.
 - Add or supersede an ADR for choices that are expensive to reverse.
-- Update the research register when a live API or published specification is
-  checked; include the date, version, and evidence.
-- Do not change a claim from MODELLED to REAL without a reproducible sandbox
-  artifact or test report.
+- Update the research register when a live API or published specification is checked;
+  include the date, version, and evidence.
+- Do not change a claim from MODELLED to REAL without a reproducible sandbox artifact or
+  test report.
 
 ## Release approach
 

@@ -1,23 +1,20 @@
 # V1 Implementation Plan
 
-**Plan version:** 1.0
-**Date:** 2026-10-02
-**Planning principle:** complete thin, testable vertical slices. A phase is done
-only when its exit test passes; a folder or class existing is not progress by
-itself.
+**Plan version:** 1.0 **Date:** 2026-10-02 **Planning principle:** complete thin,
+testable vertical slices. A phase is done only when its exit test passes; a folder or
+class existing is not progress by itself.
 
 ## Proposed technical foundation
 
-Use a TypeScript monorepo so the API, browser app, contracts, MCP tools, and
-tests share one type system. The proposed stack is Node.js, pnpm workspaces,
-Fastify, Next.js, Zod, PostgreSQL, and a lightweight SQL mapper. This is an
-initial decision, not a permanent truth; the first implementation slice will
-validate it before the domain becomes large.
+Use a TypeScript monorepo so the API, browser app, contracts, MCP tools, and tests share
+one type system. The proposed stack is Node.js, pnpm workspaces, Fastify, Next.js, Zod,
+PostgreSQL, and a lightweight SQL mapper. This is an initial decision, not a permanent
+truth; the first implementation slice will validate it before the domain becomes large.
 
 Build a **modular monolith**: one repository and one database, with strict module
-boundaries. It can run as API, web, and worker processes. This gives us simple
-local development and transaction safety now, while leaving seams that can be
-split later if real load requires it.
+boundaries. It can run as API, web, and worker processes. This gives us simple local
+development and transaction safety now, while leaving seams that can be split later if
+real load requires it.
 
 ## Target repository shape
 
@@ -41,17 +38,17 @@ CONDUIT/
 └── tests/                   # cross-module acceptance and invariant tests
 ```
 
-Dependency direction is inward: adapters may depend on application/domain;
-domain never imports a web framework, database, model SDK, or payment SDK.
+Dependency direction is inward: adapters may depend on application/domain; domain never
+imports a web framework, database, model SDK, or payment SDK.
 
 ## Phase 0 — foundation and executable contracts
 
 **Build**
 
-- Workspace, formatter, linter, type checker, unit test runner, CI, and
-  conventional commit guidance.
-- Immutable `Money`, identifiers, clocks, reason codes, result types, and
-  versioned JSON contracts.
+- Workspace, formatter, linter, type checker, unit test runner, CI, and conventional
+  commit guidance.
+- Immutable `Money`, identifiers, clocks, reason codes, result types, and versioned JSON
+  contracts.
 - A terminology glossary and first architecture-decision records.
 - Local PostgreSQL configuration and migrations.
 
@@ -63,8 +60,7 @@ domain never imports a web framework, database, model SDK, or payment SDK.
 
 **Exit test**
 
-- One command runs formatting checks, type checks, unit tests, and migration
-  validation.
+- One command runs formatting checks, type checks, unit tests, and migration validation.
 - Floats cannot enter a money constructor.
 - Domain package has an automated forbidden-import test.
 
@@ -80,8 +76,8 @@ domain never imports a web framework, database, model SDK, or payment SDK.
 
 **Why first**
 
-The commerce loop must work without an LLM. Otherwise model behaviour hides
-ordinary commerce bugs.
+The commerce loop must work without an LLM. Otherwise model behaviour hides ordinary
+commerce bugs.
 
 **Exit test**
 
@@ -93,21 +89,21 @@ ordinary commerce bugs.
 
 **Build**
 
-- Typed authorization grant: tenant, buyer, merchant, currency, maximum amount,
-  allowed categories/SKUs, expiry, revocation state, and policy version.
+- Typed authorization grant: tenant, buyer, merchant, currency, maximum amount, allowed
+  categories/SKUs, expiry, revocation state, and policy version.
 - Append-only RESERVE/CONFIRM/RELEASE/REVERSE drawdown entries.
-- Pure policy rules returning ALLOW, DENY, or REQUIRE_APPROVAL plus reason,
-  explanation, and recovery action.
+- Pure policy rules returning ALLOW, DENY, or REQUIRE_APPROVAL plus reason, explanation,
+  and recovery action.
 - Ordered commit gate: cart state → live reprice → stated-total comparison →
-  authorization scope → stock reservation → drawdown reservation → policy →
-  idempotency → provider call → confirmation/release.
+  authorization scope → stock reservation → drawdown reservation → policy → idempotency
+  → provider call → confirmation/release.
 - Database transaction boundaries, unique operation keys, durable outbox, and
   unknown-payment reconciliation.
 
 **Exit test**
 
-- Planted wrong arithmetic and a real price change produce different reason
-  codes and itemized explanations.
+- Planted wrong arithmetic and a real price change produce different reason codes and
+  itemized explanations.
 - Concurrent identical commits produce one order.
 - A crash at every boundary leaves a recoverable state and never overspends.
 - Provider timeout enters UNKNOWN and queries provider state before any retry.
@@ -122,8 +118,8 @@ ordinary commerce bugs.
 - Trust labels for operator input, structured tool data, and untrusted prose.
 - Per-run quarantine markers and permission narrowing after untrusted content.
 - Central redaction/tokenization before prompts, logs, traces, and audit.
-- Gapless tenant-aware audit sequence with hash chaining and policy/context
-  version fingerprints.
+- Gapless tenant-aware audit sequence with hash chaining and policy/context version
+  fingerprints.
 
 **Exit test**
 
@@ -138,29 +134,28 @@ ordinary commerce bugs.
 
 - Provider-neutral model interface with structured output validation.
 - Two-step intent flow: model proposes typed constraints; user confirms them.
-- Explicit state machine with a small tool set, step budget, time budget, and
-  loop detection.
-- Deterministic filtering before model ranking; server totals after every cart
-  mutation.
-- A deterministic scripted agent for tests, a deliberately flawed agent for
-  safety experiments, and one live-model adapter.
+- Explicit state machine with a small tool set, step budget, time budget, and loop
+  detection.
+- Deterministic filtering before model ranking; server totals after every cart mutation.
+- A deterministic scripted agent for tests, a deliberately flawed agent for safety
+  experiments, and one live-model adapter.
 
 **Exit test**
 
 - The same scenarios run against all three agents.
 - Bad model output fails schema validation without side effects.
 - A deliberately wrong stated total never becomes the charged total.
-- An unsatisfiable request ends with a useful refusal instead of an infinite
-  loop or silent constraint relaxation.
+- An unsatisfiable request ends with a useful refusal instead of an infinite loop or
+  silent constraint relaxation.
 
 ## Phase 5 — merchant onboarding
 
 **Build**
 
-- CSV/XLSX import with inferred mapping, preview, human confirmation, row-level
-  reasons, and merge-only defaults.
-- Storefront import from JSON-LD/microdata/Open Graph with SSRF-safe fetching,
-  redirect revalidation, content limits, and provenance.
+- CSV/XLSX import with inferred mapping, preview, human confirmation, row-level reasons,
+  and merge-only defaults.
+- Storefront import from JSON-LD/microdata/Open Graph with SSRF-safe fetching, redirect
+  revalidation, content limits, and provenance.
 - Explicit price-change workflow; imports cannot silently overwrite prices.
 - Human review for model-enriched attributes.
 
@@ -176,43 +171,42 @@ ordinary commerce bugs.
 
 - Versioned scenario dataset whose expected results are written before runs.
 - Metrics split into hard-zero invariants and quality measures.
-- Paired guardrails-on/off prompt-injection trials and one-control-at-a-time
-  ablations.
-- Property-based tests for money, ledger, policy, and idempotency; concurrency
-  and crash-point tests for commit.
+- Paired guardrails-on/off prompt-injection trials and one-control-at-a-time ablations.
+- Property-based tests for money, ledger, policy, and idempotency; concurrency and
+  crash-point tests for commit.
 - Reports that distinguish scripted-agent evidence from live-model evidence.
 
 **Exit test**
 
-- Unauthorized effects, cap violations, duplicate charges, cross-tenant access,
-  and PII leaks are zero.
-- At least one attack succeeds with a relevant control disabled and fails safely
-  with controls enabled, proving the test is meaningful.
+- Unauthorized effects, cap violations, duplicate charges, cross-tenant access, and PII
+  leaks are zero.
+- At least one attack succeeds with a relevant control disabled and fails safely with
+  controls enabled, proving the test is meaningful.
 
 ## Phase 7 — presentable product and interoperability
 
 **Build**
 
-- Buyer console, merchant console, trusted/untrusted catalog view, live run
-  timeline, receipt, audit explorer, and evaluation dashboard.
+- Buyer console, merchant console, trusted/untrusted catalog view, live run timeline,
+  receipt, audit explorer, and evaluation dashboard.
 - Visible REAL / MODELLED / REFERENCED labels.
 - Authenticated MCP shopping surface.
-- UCP checkout adapter as the first commerce-standard target; ACP/AP2 adapters
-  remain separate and are added only with explicit conformance tests.
+- UCP checkout adapter as the first commerce-standard target; ACP/AP2 adapters remain
+  separate and are added only with explicit conformance tests.
 - Sandbox payment-provider adapter after live manifest/schema verification.
 
 **Exit test**
 
-- A new user can understand authorization → selection → commit → payment →
-  receipt without reading source code.
+- A new user can understand authorization → selection → commit → payment → receipt
+  without reading source code.
 - The demo clearly identifies which external calls are real.
 - Protocol/provider claims link to a dated conformance or manifest report.
 
 ## Definition of done for every slice
 
 - Behaviour and threat addressed are documented.
-- Unit tests cover rules; integration tests cover persistence; acceptance tests
-  cover the user-visible flow.
+- Unit tests cover rules; integration tests cover persistence; acceptance tests cover
+  the user-visible flow.
 - Failure paths and structured recovery are tested, not only the happy path.
 - Telemetry contains correlation IDs and no raw PII.
 - A decision record exists for non-obvious trade-offs.
@@ -221,6 +215,6 @@ ordinary commerce bugs.
 
 ## Immediate next step
 
-Implement Phase 0 only. Before installing dependencies, verify the local Node,
-pnpm, Docker/PostgreSQL, and Git environment. Then scaffold the smallest
-workspace that can prove the domain package is independent and `Money` is safe.
+Implement Phase 0 only. Before installing dependencies, verify the local Node, pnpm,
+Docker/PostgreSQL, and Git environment. Then scaffold the smallest workspace that can
+prove the domain package is independent and `Money` is safe.
