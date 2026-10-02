@@ -217,3 +217,73 @@ pure policy decisions, stock reservation, idempotency key, and the ordered commi
 
 Build Phase 3's enforcement boundary and tamper-evident audit trail, then show every
 proposed tool call and its decision in the same Trust Lab.
+
+## 2026-10-02 — Phase 3: enforcement boundary, privacy, and audit
+
+### What we built
+
+- Separate `@conduit/enforcement` and `@conduit/observability` packages so tool
+  authority, redaction, and evidence do not leak into commerce domain code.
+- One interceptor for internal and external-shaped tools with runtime discovery, exact
+  schema hashing, tenant approvals, argument validation, and fail-closed decisions.
+- Closed `READ_ONLY`, `REVERSIBLE_WRITE`, `BINDING_WRITE`, and `EXTERNAL_EFFECT`
+  classifications controlled by approved records rather than live providers.
+- `OPERATOR`, `TOOL_STRUCTURED`, and `UNTRUSTED_PROSE` provenance labels.
+- Fresh per-run quarantine nonces and durable `CLEAN` → `QUARANTINED` state.
+- Permission narrowing that requires one-call human approval for high-impact actions
+  after untrusted prose appears.
+- Central session tokenization for registered values, sensitive fields, email, phone,
+  payment patterns, correlation metadata, tool output, errors, and audit payloads.
+- One `DECISION` plus one `OUTCOME` audit entry for every proposed call.
+- PostgreSQL tenant-head locking, gapless sequences, `pgcrypto` hash links, append-only
+  triggers, and an independent Node verifier.
+- A redesigned Phase 3 Trust Lab with separate Purchase Safety and Tool Boundary
+  workspaces and seven new interactive scenarios.
+
+### Decisions and why
+
+- **Discover and reconcile; do not hardcode.** A static list cannot detect a newly
+  appeared or changed provider capability.
+- **Classification is local authority.** A provider cannot decide that its own tool is
+  harmless.
+- **Quarantine plus narrowing.** Delimiters help the model, but only deterministic
+  permission loss makes manipulation harmless.
+- **Database serialization.** A process mutex cannot keep audit order across replicas.
+- **Redact before persistence.** Rendering-time cleanup is too late once a log exists.
+- **Independent verification.** PostgreSQL creates hashes and Node verifies them so the
+  checker does not merely repeat the same implementation path.
+
+### Bugs found by evidence
+
+- Concurrent entries were stored correctly but initially read in text order
+  (`1, 10, 11, 2`). The independent chain test failed, and the query now sorts the
+  bigint column before converting it for JavaScript.
+- A privacy review found that correlation IDs also accept external text. They now pass
+  through the same tokenizer, and the PII test seeds that surface explicitly.
+
+### Evidence
+
+- `pnpm check` passes formatting, linting, strict type checking, 43 pure tests, and all
+  builds.
+- `pnpm db:check` passes 19 live PostgreSQL tests after applying migrations twice.
+- Ten simultaneous tool calls produce sequences 1–20 with one decision and one outcome
+  per call.
+- Unknown tools and schema drift cause zero runtime executions.
+- Seeded sensitive names, emails, phone numbers, and correlation metadata appear on no
+  tested response or audit surface.
+- Normal audit updates and deletes are rejected; independent verification passes.
+- All seven live Phase 3 demo endpoints return the expected decision and verified chain.
+
+### Honest limits
+
+- Hash chaining is tamper-evident, not tamper-proof; external anchoring is not built.
+- Quarantine reduces injection risk but cannot guarantee model behavior.
+- Automatic PII detection is incomplete by nature; known identity values must be
+  registered, and production needs an encrypted token vault.
+- The tool runtime is MODELLED and local. Authenticated MCP arrives in a later phase.
+
+### Next action
+
+Build Phase 4's bounded AI buyer above this boundary: typed intent confirmation, an
+explicit state machine, step/time budgets, structured output validation, and comparable
+scripted, flawed, and live-model adapters.

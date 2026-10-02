@@ -23,20 +23,20 @@
     <main>
       <section class="hero">
         <div>
-          <p class="eyebrow">PHASE 02 · INTERACTIVE BUILD</p>
-          <h1>See the trust boundary<br />make its decision.</h1>
+          <p class="eyebrow">PHASE 03 · INTERACTIVE BUILD</p>
+          <h1>Every action crosses<br />one visible boundary.</h1>
           <p class="hero-copy">
-            The agent can suggest a purchase. CONDUIT independently decides whether that
-            purchase is allowed—and makes every safety gate visible.
+            The agent can suggest anything. CONDUIT independently decides whether a tool
+            may act—and records the decision in a verifiable audit chain.
           </p>
         </div>
         <div class="hero-orbit" aria-hidden="true">
           <div class="orbit-ring ring-one"></div>
           <div class="orbit-ring ring-two"></div>
-          <div class="core">TRUST<br />KERNEL</div>
-          <span class="node n1">QUOTE</span>
-          <span class="node n2">POLICY</span>
-          <span class="node n3">LEDGER</span>
+          <div class="core">ACTION<br />BOUNDARY</div>
+          <span class="node n1">CLASSIFY</span>
+          <span class="node n2">ENFORCE</span>
+          <span class="node n3">AUDIT</span>
         </div>
       </section>
 
@@ -55,11 +55,20 @@
             <span class="phase-state">BUILT</span>
           </article>
           <div class="phase-arrow">→</div>
-          <article class="phase-card active">
+          <article class="phase-card done">
             <span class="phase-number">02</span>
             <div>
               <h3>Trust kernel</h3>
               <p>Authorization · policy · ledger · safe provider recovery</p>
+            </div>
+            <span class="phase-state">BUILT</span>
+          </article>
+          <div class="phase-arrow">→</div>
+          <article class="phase-card active newest">
+            <span class="phase-number">03</span>
+            <div>
+              <h3>Enforcement boundary</h3>
+              <p>Tool governance · quarantine · redaction · audit chain</p>
             </div>
             <span class="phase-state">NOW</span>
           </article>
@@ -75,8 +84,16 @@
               Each run creates fresh isolated data and uses the real database workflow.
             </p>
           </div>
-          <div class="scenario-list" role="list">
-            <button class="scenario active" data-scenario="authorized">
+          <div class="lab-tabs" role="tablist" aria-label="Demo phase">
+            <button class="lab-tab" data-lab="commerce" role="tab">
+              Purchase safety
+            </button>
+            <button class="lab-tab active" data-lab="boundary" role="tab">
+              Tool boundary
+            </button>
+          </div>
+          <div class="scenario-list hidden" data-list="commerce" role="list">
+            <button class="scenario" data-scenario="authorized">
               <span class="scenario-icon">✓</span>
               <span><strong>Authorized purchase</strong><small>Happy path</small></span>
             </button>
@@ -112,8 +129,49 @@
               >
             </button>
           </div>
+          <div class="scenario-list" data-list="boundary" role="list">
+            <button class="scenario active" data-scenario="trusted-read">
+              <span class="scenario-icon">T</span>
+              <span
+                ><strong>Trust-labelled read</strong
+                ><small>Data versus prose</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="permission-narrowing">
+              <span class="scenario-icon">↓</span>
+              <span
+                ><strong>Permission narrowing</strong
+                ><small>Untrusted context</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="human-approval">
+              <span class="scenario-icon">H</span>
+              <span><strong>Human approval</strong><small>Unlock one call</small></span>
+            </button>
+            <button class="scenario" data-scenario="unknown-tool">
+              <span class="scenario-icon">?</span>
+              <span><strong>Unknown tool</strong><small>Fail closed</small></span>
+            </button>
+            <button class="scenario" data-scenario="schema-drift">
+              <span class="scenario-icon">Δ</span>
+              <span><strong>Schema drift</strong><small>Changed contract</small></span>
+            </button>
+            <button class="scenario" data-scenario="pii-redaction">
+              <span class="scenario-icon">✦</span>
+              <span
+                ><strong>PII redaction</strong><small>Tokenized surfaces</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="concurrent-audit">
+              <span class="scenario-icon">#</span>
+              <span
+                ><strong>Concurrent audit</strong
+                ><small>Gapless hash chain</small></span
+              >
+            </button>
+          </div>
           <button id="run-button" class="run-button">
-            Run authorized purchase <span>→</span>
+            Run trust-labelled read <span>→</span>
           </button>
         </aside>
 
@@ -123,8 +181,8 @@
             <span class="play">▶</span>
             <h3>Choose a scenario and run it</h3>
             <p>
-              You will see the claimed quote, every policy gate, and durable database
-              evidence.
+              You will see the proposal, boundary decision, trust state, and durable
+              audit evidence.
             </p>
           </div>
           <div id="loading-state" class="loading-state hidden">

@@ -123,6 +123,11 @@ live six-scenario Trust Lab are operational with a MODELLED provider.
 
 ## Phase 3 — enforcement boundary and audit
 
+**Status: complete on 2026-10-02.** One interceptor now governs discovered tools using
+approved schema snapshots, closed classifications, trust labels, durable permission
+narrowing, central tokenization, and a PostgreSQL-serialized hash chain. Seven new live
+demo scenarios make the boundary and evidence visible.
+
 **Build**
 
 - One tool-call interceptor for internal and external tools.
@@ -228,5 +233,6 @@ live six-scenario Trust Lab are operational with a MODELLED provider.
 
 ## Immediate next step
 
-Begin Phase 3 with the single enforcement interceptor and a gapless, hash-chained audit
-record. Extend the Trust Lab so every proposed tool call visibly crosses that boundary.
+Begin Phase 4 with a provider-neutral model interface, typed intent confirmation, and a
+bounded agent state machine. Route every agent tool proposal through the completed Phase
+3 boundary and compare scripted, deliberately flawed, and live-model behavior.

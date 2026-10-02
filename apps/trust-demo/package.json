@@ -13,7 +13,9 @@
     "@conduit/application": "workspace:*",
     "@conduit/contracts": "workspace:*",
     "@conduit/domain": "workspace:*",
-    "@conduit/infrastructure": "workspace:*"
+    "@conduit/enforcement": "workspace:*",
+    "@conduit/infrastructure": "workspace:*",
+    "@conduit/observability": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.4",

@@ -24,6 +24,28 @@ Human confirms typed intent
 Above the double line, assume mistakes and manipulation. Below it, use typed data,
 deterministic rules, database constraints, and transactions.
 
+## The tool boundary flow
+
+Every internal or external adapter presents runtime-discovered tool descriptors. The
+boundary does not carry a hardcoded allow-list. It reconciles each discovered schema
+hash with a tenant approval stored in PostgreSQL, then applies this order:
+
+```text
+discover → reconcile snapshot → validate arguments → check run permission
+        → append DECISION → forward or block → append OUTCOME
+```
+
+Unknown tools, schema drift, discovery errors, and invalid arguments fail closed. Tool
+classification comes from the approved snapshot—not from the provider being governed.
+
+Structured values are labelled as trusted data. Merchant prose is tokenized, wrapped
+with a per-run nonce, and marks the durable run `QUARANTINED`. Reads and reversible
+writes remain usable; binding or external effects then need explicit one-call approval.
+
+The audit head is locked per tenant in PostgreSQL, which creates a gapless sequence
+under concurrent processes. PostgreSQL calculates each hash and an independent Node
+verifier checks the chain. This is tamper-evident only; no external anchor exists yet.
+
 ## Why a modular monolith?
 
 Microservices would add network failures and distributed transactions before we have
@@ -81,6 +103,8 @@ after a crash.
 - Policy evaluation is a pure function of a versioned context.
 - Unknown tools, rules, schemas, states, and provider results fail closed.
 - Audit text is redacted before persistence, not only before display.
+- Every intercepted call has one audit decision and one audit outcome.
+- Untrusted prose can narrow authority but can never widen it.
 
 ## Protocol strategy
 

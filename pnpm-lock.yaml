@@ -44,9 +44,15 @@ importers:
       '@conduit/domain':
         specifier: workspace:*
         version: link:../../packages/domain
+      '@conduit/enforcement':
+        specifier: workspace:*
+        version: link:../../packages/enforcement
       '@conduit/infrastructure':
         specifier: workspace:*
         version: link:../../packages/infrastructure
+      '@conduit/observability':
+        specifier: workspace:*
+        version: link:../../packages/observability
     devDependencies:
       '@types/node':
         specifier: 26.6.4
@@ -88,6 +94,15 @@ importers:
 
   packages/domain: {}
 
+  packages/enforcement:
+    dependencies:
+      '@conduit/domain':
+        specifier: workspace:*
+        version: link:../domain
+      '@conduit/observability':
+        specifier: workspace:*
+        version: link:../observability
+
   packages/infrastructure:
     dependencies:
       '@conduit/application':
@@ -96,6 +111,12 @@ importers:
       '@conduit/domain':
         specifier: workspace:*
         version: link:../domain
+      '@conduit/enforcement':
+        specifier: workspace:*
+        version: link:../enforcement
+      '@conduit/observability':
+        specifier: workspace:*
+        version: link:../observability
       pg:
         specifier: 8.23.1
         version: 8.23.1
@@ -109,6 +130,8 @@ importers:
       node-pg-migrate:
         specifier: 9.0.0
         version: 9.0.0(@types/pg@8.23.1)(pg@8.23.1)
+
+  packages/observability: {}
 
 packages:
 

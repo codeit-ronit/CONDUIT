@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "@conduit/infrastructure";
 
+import { boundaryScenarioNames, runBoundaryScenario } from "./boundary-scenarios.js";
+import type { BoundaryScenarioName } from "./boundary-scenarios.js";
 import { runScenario, scenarioNames } from "./scenarios.js";
 import type { ScenarioName } from "./scenarios.js";
 
@@ -28,8 +30,8 @@ async function handleRequest(
     if (request.method === "GET" && url.pathname === "/api/overview") {
       json(response, 200, {
         claimLevel: "MODELLED",
-        phase: 2,
-        scenarios: scenarioNames,
+        phase: 3,
+        scenarios: { commerce: scenarioNames, boundary: boundaryScenarioNames },
         phases: [
           {
             phase: 1,
@@ -41,8 +43,22 @@ async function handleRequest(
             title: "Trust kernel",
             adds: "Authorization, policy, ledger, outbox, reconciliation",
           },
+          {
+            phase: 3,
+            title: "Enforcement boundary",
+            adds: "Tool governance, quarantine, redaction, audit chain",
+          },
         ],
       });
+      return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/boundary/")) {
+      const name = url.pathname.slice("/api/boundary/".length) as BoundaryScenarioName;
+      if (!boundaryScenarioNames.includes(name)) {
+        json(response, 404, { error: "Unknown boundary scenario" });
+        return;
+      }
+      json(response, 200, await runBoundaryScenario(pool, name));
       return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/scenarios/")) {

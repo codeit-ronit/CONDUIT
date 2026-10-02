@@ -1,0 +1,17 @@
+{
+  "name": "@conduit/enforcement",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@conduit/domain": "workspace:*",
+    "@conduit/observability": "workspace:*"
+  }
+}
