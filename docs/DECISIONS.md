@@ -13,6 +13,7 @@ changes, add a new ADR that supersedes the old one.
 | [ADR-0005](decisions/ADR-0005-durable-trusted-commit.md)                | Durable trusted commit and provider outbox   | Accepted | Crashes and ambiguous provider results recover without duplicate effects     |
 | [ADR-0006](decisions/ADR-0006-runtime-tool-governance.md)               | Discover and reconcile every live tool       | Accepted | Unknown capabilities and changed schemas fail closed before execution        |
 | [ADR-0007](decisions/ADR-0007-audit-chain-and-redaction.md)             | Serialize audit; tokenize before persistence | Accepted | Concurrent evidence stays complete and tested output surfaces contain no PII |
+| [ADR-0008](decisions/ADR-0008-bounded-model-runtime.md)                 | Bound every model behind one runtime         | Accepted | Model quality can vary without changing authority, money, or termination     |
 
 ## Short-form product decisions
 

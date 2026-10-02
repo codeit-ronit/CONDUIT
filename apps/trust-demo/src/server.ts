@@ -5,6 +5,8 @@ import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "@conduit/infrastructure";
 
+import { agentScenarioNames, runAgentScenario } from "./agent-scenarios.js";
+import type { AgentScenarioName } from "./agent-scenarios.js";
 import { boundaryScenarioNames, runBoundaryScenario } from "./boundary-scenarios.js";
 import type { BoundaryScenarioName } from "./boundary-scenarios.js";
 import { runScenario, scenarioNames } from "./scenarios.js";
@@ -30,8 +32,12 @@ async function handleRequest(
     if (request.method === "GET" && url.pathname === "/api/overview") {
       json(response, 200, {
         claimLevel: "MODELLED",
-        phase: 3,
-        scenarios: { commerce: scenarioNames, boundary: boundaryScenarioNames },
+        phase: 4,
+        scenarios: {
+          commerce: scenarioNames,
+          boundary: boundaryScenarioNames,
+          agent: agentScenarioNames,
+        },
         phases: [
           {
             phase: 1,
@@ -48,8 +54,22 @@ async function handleRequest(
             title: "Enforcement boundary",
             adds: "Tool governance, quarantine, redaction, audit chain",
           },
+          {
+            phase: 4,
+            title: "Bounded AI buyer",
+            adds: "Typed intent, state machine, budgets, model adapters",
+          },
         ],
       });
+      return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/agent/")) {
+      const name = url.pathname.slice("/api/agent/".length) as AgentScenarioName;
+      if (!agentScenarioNames.includes(name)) {
+        json(response, 404, { error: "Unknown agent scenario" });
+        return;
+      }
+      json(response, 200, await runAgentScenario(pool, name));
       return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/boundary/")) {

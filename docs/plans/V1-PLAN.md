@@ -148,6 +148,13 @@ demo scenarios make the boundary and evidence visible.
 
 ## Phase 4 — bounded AI buyer
 
+**Status: implementation complete on 2026-10-02; live-provider validation pending.**
+Strict intent/action contracts, exact intent confirmation, deterministic pre-filtering,
+an explicit budgeted state machine, four boundary-governed commerce tools,
+scripted/flawed/OpenAI strategies, and six demo scenarios are operational. The OpenAI
+adapter contract is tested with an injected transport, but the same suite has not yet
+been executed against a real model account, so the full exit gate remains open.
+
 **Build**
 
 - Provider-neutral model interface with structured output validation.
@@ -233,6 +240,7 @@ demo scenarios make the boundary and evidence visible.
 
 ## Immediate next step
 
-Begin Phase 4 with a provider-neutral model interface, typed intent confirmation, and a
-bounded agent state machine. Route every agent tool proposal through the completed Phase
-3 boundary and compare scripted, deliberately flawed, and live-model behavior.
+After optional OpenAI credentials are configured, capture the live Phase 4 comparison.
+In parallel, begin Phase 5 with a reviewed CSV import vertical slice: mapping preview,
+explicit confirmation, row-level reasons, provenance, and merge-only writes. Imported
+products must immediately work in the bounded buyer.

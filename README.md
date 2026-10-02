@@ -27,10 +27,10 @@ architecture.
 
 ## Current status
 
-**Phase 3: enforcement boundary and audit.** Runtime tool discovery, approved schema
-snapshots, fail-closed interception, trust labels, permission narrowing, central PII
-tokenization, and a gapless hash-chained PostgreSQL audit are operational. Payment and
-tool effects remain explicitly MODELLED; no real money moves.
+**Phase 4: bounded AI buyer.** Typed intent confirmation, deterministic catalog
+filtering, a budgeted state machine, scripted/flawed/OpenAI model strategies, and four
+boundary-governed commerce tools are operational. Payment and tool effects remain
+explicitly MODELLED; no real money moves.
 
 ## Local setup
 
@@ -48,9 +48,12 @@ For the visual phase-by-phase demo:
 pnpm demo:web
 ```
 
-Then open <http://127.0.0.1:4310>. Switch between **Purchase safety** and **Tool
-boundary**. The second workspace visualizes quarantine, permission narrowing, human
-approval, unknown tools, schema drift, PII tokenization, and concurrent audit.
+Then open <http://127.0.0.1:4310>. Switch among **Purchase safety**, **Tool boundary**,
+and **AI buyer**. The AI workspace compares a safe scripted buyer with wrong-total,
+malformed-output, looping, impossible-request, and optional live-model scenarios.
+
+To enable the real model adapter, add `OPENAI_API_KEY` and an explicit `OPENAI_MODEL` to
+your local `.env`. The key stays on the server and must never be committed.
 
 On macOS, Docker Desktop or Docker CLI with Colima may provide the Docker engine. See
 the [database learning note](docs/learning/PHASE-0-DATABASE.md) for the mental model and

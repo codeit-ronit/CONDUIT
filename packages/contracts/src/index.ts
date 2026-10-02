@@ -32,3 +32,5 @@ export type {
   CreateBuyerInput,
   TrustedCommitInput,
 } from "./trust-contracts.js";
+export { buyerActionSchema, shoppingIntentProposalSchema } from "./agent-contracts.js";
+export type { BuyerAction, ShoppingIntentProposal } from "./agent-contracts.js";

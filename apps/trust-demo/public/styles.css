@@ -218,7 +218,7 @@ h1 {
 }
 .phase-track {
   display: grid;
-  grid-template-columns: 1fr 36px 1fr 36px 1fr;
+  grid-template-columns: 1fr 28px 1fr 28px 1fr 28px 1fr;
   align-items: center;
   margin-top: 26px;
 }
@@ -294,7 +294,7 @@ h1 {
 }
 .lab-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 4px;
   margin-top: 24px;
   padding: 4px;
@@ -776,6 +776,40 @@ h1 {
 .error {
   color: var(--red);
   padding: 30px;
+}
+.confirmation {
+  margin-top: 15px;
+  padding: 10px;
+  color: var(--lime);
+  border: 1px solid rgba(185, 244, 93, 0.25);
+  background: var(--lime-soft);
+  font:
+    10px/1.5 ui-monospace,
+    monospace;
+  overflow-wrap: anywhere;
+}
+.agent-event {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #263029;
+}
+.agent-event strong,
+.agent-event small {
+  display: block;
+}
+.agent-event strong {
+  color: #d8e2da;
+  font:
+    11px ui-monospace,
+    monospace;
+}
+.agent-event small {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
 
 footer {

@@ -24,6 +24,24 @@ Human confirms typed intent
 Above the double line, assume mistakes and manipulation. Below it, use typed data,
 deterministic rules, database constraints, and transactions.
 
+## The bounded buyer loop
+
+The model has two jobs: propose typed intent and propose one next action. It does not
+own the loop. `@conduit/agent-runtime` validates model output, requires an exact intent
+fingerprint confirmation, filters invalid products in code, and enforces step, time, and
+repetition budgets.
+
+```text
+human request → typed proposal → exact confirmation → deterministic candidates
+      → model proposes one action → boundary → server-priced cart/commit gate
+      ↘ invalid, repeated, over budget, or impossible → safe terminal state
+```
+
+Scripted, deliberately flawed, and OpenAI adapters implement the same two-method
+strategy. The live adapter uses strict Structured Outputs, but local schema validation
+still runs because structured shape is not business truth. Provider selection never
+changes available tools or policy.
+
 ## The tool boundary flow
 
 Every internal or external adapter presents runtime-discovered tool descriptors. The

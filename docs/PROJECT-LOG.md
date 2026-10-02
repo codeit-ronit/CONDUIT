@@ -287,3 +287,62 @@ proposed tool call and its decision in the same Trust Lab.
 Build Phase 4's bounded AI buyer above this boundary: typed intent confirmation, an
 explicit state machine, step/time budgets, structured output validation, and comparable
 scripted, flawed, and live-model adapters.
+
+## 2026-10-02 — Phase 4: bounded AI buyer
+
+### What we built
+
+- A new `@conduit/agent-runtime` package with provider-neutral intent and action
+  strategies.
+- Strict, versioned Zod contracts for shopping intent and one-step model actions.
+- Exact SHA-256 intent fingerprints so tools remain untouched until the proposed
+  constraints are confirmed.
+- An explicit runtime with six-step, 15-second, and repeated-action budgets.
+- Deterministic category, stock, quantity, total-budget, attribute, and exclusion
+  filtering before model ranking.
+- Scripted, deliberately flawed, and OpenAI Responses API adapters.
+- Real catalog, cart, review, and trusted-commit tools backed by PostgreSQL and routed
+  through the Phase 3 boundary.
+- A Phase 4 demo workspace showing intent, state transitions, intercepted calls,
+  authoritative money, failure reason, and audit verification.
+
+### Decisions and why
+
+- **One loop, many strategies.** Provider substitution must not create different safety
+  rules.
+- **Confirmation binds typed data.** A natural-language sentence is not an executable
+  authorization.
+- **Filter before ranking.** Hard constraints belong in code; preference among valid
+  candidates may belong to a model.
+- **Structured output is shape, not truth.** Local validation, loop limits, policy, and
+  the commit gate remain necessary.
+- **Do not send merchant prose when it is unnecessary.** The boundary records and
+  quarantines it, but Phase 4 ranking works from structured fields only.
+
+### Evidence
+
+- `pnpm test` passes 52 pure tests across 11 files.
+- `pnpm db:check` passes all 19 PostgreSQL integration tests.
+- The scripted live endpoint confirmed the server total of ₹398.00 with a verified audit
+  chain.
+- A flawed ₹0.01 stated total reached the real gate and stopped with
+  `QUOTE_ARITHMETIC_MISMATCH`; nothing was charged.
+- Malformed output made zero tool calls; repeated output stopped on the third identical
+  action; an impossible ₹1.00 request refused after one read.
+- The OpenAI transport contract is tested with an injected fake response. No real-model
+  claim is made without configured credentials.
+
+### Honest limits
+
+- Live OpenAI execution is not configured or empirically evaluated yet.
+- Agent sessions and confirmation records are process-local rather than durable.
+- The current demo displays an exact confirmation step but does not yet authenticate a
+  separate browser confirmation request.
+- Catalog semantics depend on already-structured attributes; merchant onboarding is
+  next.
+
+### Next action
+
+Build Phase 5's first merchant-onboarding vertical slice: reviewed CSV import with
+mapping preview, row-level reasons, source provenance, merge-only defaults, and direct
+compatibility with the bounded buyer.

@@ -23,20 +23,20 @@
     <main>
       <section class="hero">
         <div>
-          <p class="eyebrow">PHASE 03 · INTERACTIVE BUILD</p>
-          <h1>Every action crosses<br />one visible boundary.</h1>
+          <p class="eyebrow">PHASE 04 · INTERACTIVE BUILD</p>
+          <h1>AI may choose.<br />Code stays in control.</h1>
           <p class="hero-copy">
-            The agent can suggest anything. CONDUIT independently decides whether a tool
-            may act—and records the decision in a verifiable audit chain.
+            Watch a bounded buyer turn human intent into typed actions. Its model can be
+            good, flawed, or live; every effect still crosses the same trusted system.
           </p>
         </div>
         <div class="hero-orbit" aria-hidden="true">
           <div class="orbit-ring ring-one"></div>
           <div class="orbit-ring ring-two"></div>
-          <div class="core">ACTION<br />BOUNDARY</div>
-          <span class="node n1">CLASSIFY</span>
-          <span class="node n2">ENFORCE</span>
-          <span class="node n3">AUDIT</span>
+          <div class="core">BOUNDED<br />BUYER</div>
+          <span class="node n1">CONFIRM</span>
+          <span class="node n2">LIMIT</span>
+          <span class="node n3">VERIFY</span>
         </div>
       </section>
 
@@ -64,11 +64,20 @@
             <span class="phase-state">BUILT</span>
           </article>
           <div class="phase-arrow">→</div>
-          <article class="phase-card active newest">
+          <article class="phase-card done">
             <span class="phase-number">03</span>
             <div>
               <h3>Enforcement boundary</h3>
               <p>Tool governance · quarantine · redaction · audit chain</p>
+            </div>
+            <span class="phase-state">BUILT</span>
+          </article>
+          <div class="phase-arrow">→</div>
+          <article class="phase-card active newest">
+            <span class="phase-number">04</span>
+            <div>
+              <h3>Bounded AI buyer</h3>
+              <p>Typed intent · state machine · budgets · model adapters</p>
             </div>
             <span class="phase-state">NOW</span>
           </article>
@@ -91,6 +100,7 @@
             <button class="lab-tab active" data-lab="boundary" role="tab">
               Tool boundary
             </button>
+            <button class="lab-tab" data-lab="agent" role="tab">AI buyer</button>
           </div>
           <div class="scenario-list hidden" data-list="commerce" role="list">
             <button class="scenario" data-scenario="authorized">
@@ -167,6 +177,43 @@
               <span
                 ><strong>Concurrent audit</strong
                 ><small>Gapless hash chain</small></span
+              >
+            </button>
+          </div>
+          <div class="scenario-list hidden" data-list="agent" role="list">
+            <button class="scenario active" data-scenario="scripted">
+              <span class="scenario-icon">AI</span>
+              <span
+                ><strong>Safe scripted buyer</strong
+                ><small>Complete bounded run</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="wrong-total">
+              <span class="scenario-icon">≠</span>
+              <span><strong>Flawed total</strong><small>Model says ₹0.01</small></span>
+            </button>
+            <button class="scenario" data-scenario="bad-output">
+              <span class="scenario-icon">{ }</span>
+              <span
+                ><strong>Bad model output</strong><small>Zero tool effects</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="loop">
+              <span class="scenario-icon">∞</span>
+              <span><strong>Agent loop</strong><small>Stopped by budget</small></span>
+            </button>
+            <button class="scenario" data-scenario="unsatisfiable">
+              <span class="scenario-icon">×</span>
+              <span
+                ><strong>Impossible request</strong
+                ><small>No silent relaxation</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="live-model">
+              <span class="scenario-icon">●</span>
+              <span
+                ><strong>Live OpenAI model</strong
+                ><small>Same runtime and tools</small></span
               >
             </button>
           </div>

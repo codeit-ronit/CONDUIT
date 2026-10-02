@@ -6,7 +6,11 @@ const empty = document.querySelector("#empty-state");
 const loading = document.querySelector("#loading-state");
 const result = document.querySelector("#result");
 let activeLab = "boundary";
-const selectedByLab = { commerce: "authorized", boundary: "trusted-read" };
+const selectedByLab = {
+  commerce: "authorized",
+  boundary: "trusted-read",
+  agent: "scripted",
+};
 
 for (const button of buttons) {
   button.addEventListener("click", () => {
@@ -46,11 +50,14 @@ runButton.addEventListener("click", async () => {
     const endpoint =
       activeLab === "boundary"
         ? `/api/boundary/${selected}`
-        : `/api/scenarios/${selected}`;
+        : activeLab === "agent"
+          ? `/api/agent/${selected}`
+          : `/api/scenarios/${selected}`;
     const response = await fetch(endpoint, { method: "POST" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Scenario failed");
-    if (data.phase === 3) renderBoundary(data);
+    if (data.phase === 4) renderAgent(data);
+    else if (data.phase === 3) renderBoundary(data);
     else renderCommerce(data);
   } catch (error) {
     result.innerHTML = `<div class="error"><h3>Scenario failed</h3><p>${escapeHtml(error.message)}</p></div>`;
@@ -60,6 +67,85 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = false;
   }
 });
+
+function renderAgent(data) {
+  if (data.availability === "NOT_CONFIGURED") {
+    result.innerHTML = `
+      <div class="result-head">
+        <div><p class="eyebrow">LIVE ADAPTER</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+        <span class="outcome warn">SETUP NEEDED</span>
+      </div>
+      <div class="result-grid"><article class="data-card gates"><h3>HOW TO ENABLE IT</h3><p class="gate-detail">Set <code>OPENAI_API_KEY</code> and <code>OPENAI_MODEL</code> in your local <code>.env</code>, then restart the demo. The key stays server-side.</p></article></div>`;
+    return;
+  }
+  const run = data.run ?? {};
+  const outcome = agentOutcome(run.state);
+  const proposal = data.proposal?.proposal;
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">BOUNDED AGENT RUN</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome ${outcome.className}">${escapeHtml(outcome.label)}</span>
+    </div>
+    <div class="result-grid">
+      <article class="data-card">
+        <h3>1 · TYPED INTENT</h3>
+        ${
+          proposal
+            ? `
+          <div class="metric"><span>Summary</span><strong>${escapeHtml(proposal.summary)}</strong></div>
+          <div class="metric"><span>Maximum</span><strong>${money({ currency: proposal.currency, minorUnits: proposal.maximumMinorUnits })}</strong></div>
+          <div class="metric"><span>Quantity</span><strong>${proposal.quantity}</strong></div>
+          <div class="metric"><span>Excluded</span><strong>${escapeHtml(proposal.excludedTerms.join(", ") || "None")}</strong></div>
+          <div class="confirmation">✓ Human confirmed fingerprint ${escapeHtml(shortHash(data.proposal.fingerprint))}</div>
+        `
+            : `<p class="gate-detail">The proposed intent failed schema validation, so confirmation and tools never started.</p>`
+        }
+      </article>
+      <article class="data-card">
+        <h3>MODEL STRATEGY</h3>
+        <div class="metric"><span>Adapter</span><strong>${escapeHtml(run.modelId ?? "—")}</strong></div>
+        <div class="metric"><span>Claim</span><strong>${escapeHtml(data.claimLevel)}</strong></div>
+        <div class="metric"><span>Steps used</span><strong>${run.stepsUsed ?? 0} / 6</strong></div>
+        <p class="gate-detail">Changing the model does not change the boundary, money rules, or tool permissions.</p>
+      </article>
+      <article class="data-card gates">
+        <h3>2 · EXPLICIT STATE MACHINE</h3>
+        ${(run.events ?? []).map(agentEvent).join("") || `<p class="gate-detail">No state transition occurred before validation failed.</p>`}
+      </article>
+      <article class="data-card gates">
+        <h3>3 · BOUNDARY-CHECKED TOOLS</h3>
+        ${(data.boundaryCalls ?? []).map(callCard).join("") || `<p class="gate-detail">Zero tools were called.</p>`}
+      </article>
+      <article class="data-card">
+        <h3>AUTHORITATIVE MONEY RESULT</h3>
+        <div class="metric"><span>Server cart total</span><strong>${run.cart ? money({ currency: run.cart.currency, minorUnits: run.cart.totalMinorUnits }) : "—"}</strong></div>
+        <div class="metric"><span>Commit outcome</span><strong>${escapeHtml(run.commit?.outcome ?? "NO COMMIT")}</strong></div>
+        <div class="metric"><span>Charged</span><strong>${run.commit?.chargedMinorUnits ? money({ currency: run.cart.currency, minorUnits: run.commit.chargedMinorUnits }) : "NOTHING"}</strong></div>
+        ${run.failureReason ? `<p class="unknown-note">${escapeHtml(run.failureReason)}</p>` : ""}
+      </article>
+      <article class="data-card">
+        <h3>AUDIT EVIDENCE</h3>
+        <div class="metric"><span>Boundary events</span><strong>${data.audit?.entryCount ?? 0}</strong></div>
+        <div class="metric"><span>Hash chain</span><strong>${data.audit?.verification.valid ? "VERIFIED" : data.audit ? "BROKEN" : "NOT STARTED"}</strong></div>
+        <p class="gate-detail">Each forwarded or blocked tool proposal leaves a decision and outcome record.</p>
+      </article>
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+}
+
+function agentEvent(event) {
+  return `<div class="agent-event"><span class="audit-sequence">${String(event.sequence).padStart(2, "0")}</span><span><strong>${escapeHtml(event.state)}</strong><small>${escapeHtml(event.type)} · ${escapeHtml(event.detail)}</small></span></div>`;
+}
+
+function agentOutcome(state) {
+  if (state === "SUCCEEDED") return { label: "SUCCEEDED", className: "allow" };
+  if (state === "REQUIRES_APPROVAL")
+    return { label: "REQUIRE APPROVAL", className: "warn" };
+  if (state === "REFUSED") return { label: "SAFE REFUSAL", className: "warn" };
+  return { label: state ?? "FAILED", className: "deny" };
+}
 
 function renderCommerce(data) {
   const decision = data.result?.decision;

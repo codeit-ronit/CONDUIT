@@ -8,3 +8,4 @@ evidence, and limits.
 3. [Phase 1: Commerce walking skeleton](PHASE-1-COMMERCE-WALKING-SKELETON.md)
 4. [Phase 2: Trust kernel](PHASE-2-TRUST-KERNEL.md)
 5. [Phase 3: Enforcement boundary and audit](PHASE-3-ENFORCEMENT-AND-AUDIT.md)
+6. [Phase 4: Bounded AI buyer](PHASE-4-BOUNDED-AI-BUYER.md)
