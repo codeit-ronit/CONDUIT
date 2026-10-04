@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/server.ts",
+    "evaluate": "tsx src/evaluate.ts",
     "start": "tsx src/server.ts",
     "typecheck": "tsc"
   },
@@ -15,6 +16,7 @@
     "@conduit/contracts": "workspace:*",
     "@conduit/domain": "workspace:*",
     "@conduit/enforcement": "workspace:*",
+    "@conduit/evals": "workspace:*",
     "@conduit/infrastructure": "workspace:*",
     "@conduit/observability": "workspace:*",
     "@conduit/onboarding": "workspace:*"

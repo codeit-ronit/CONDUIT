@@ -10,3 +10,4 @@ evidence, and limits.
 5. [Phase 3: Enforcement boundary and audit](PHASE-3-ENFORCEMENT-AND-AUDIT.md)
 6. [Phase 4: Bounded AI buyer](PHASE-4-BOUNDED-AI-BUYER.md)
 7. [Phase 5: Merchant onboarding](PHASE-5-MERCHANT-ONBOARDING.md)
+8. [Phase 6: Evidence, evaluation, and red team](PHASE-6-EVIDENCE-AND-RED-TEAM.md)

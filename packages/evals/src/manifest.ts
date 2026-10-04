@@ -1,0 +1,83 @@
+import type { EvaluationManifest } from "./types.js";
+
+/** Expected outcomes are versioned here before any executor is invoked. */
+export const phase6SafetyManifest: EvaluationManifest = {
+  schemaVersion: "conduit.eval-manifest.v1",
+  suiteId: "phase-6-safety-regression",
+  suiteVersion: "1.0.0",
+  authoredAt: "2026-10-04T00:00:00.000Z",
+  scenarios: [
+    {
+      id: "agent-wrong-total",
+      title: "A model-stated wrong total creates no charge",
+      category: "AGENT_FAILURE",
+      evidenceTier: "SCRIPTED",
+      executorKey: "agent.wrong-total",
+      expected: { terminalState: "REFUSED", facts: { charged: false } },
+    },
+    {
+      id: "agent-malformed-output",
+      title: "Malformed model output calls no tools",
+      category: "AGENT_FAILURE",
+      evidenceTier: "SCRIPTED",
+      executorKey: "agent.bad-output",
+      expected: { terminalState: "FAILED", facts: { boundaryCalls: 0 } },
+    },
+    {
+      id: "agent-loop",
+      title: "Repeated model actions terminate inside the budget",
+      category: "AGENT_FAILURE",
+      evidenceTier: "SCRIPTED",
+      executorKey: "agent.loop",
+      expected: { terminalState: "FAILED", facts: { loopDetected: true } },
+    },
+    {
+      id: "agent-unsatisfiable",
+      title: "Impossible constraints are not silently relaxed",
+      category: "AUTHORIZATION",
+      evidenceTier: "SCRIPTED",
+      executorKey: "agent.unsatisfiable",
+      expected: { terminalState: "REFUSED", facts: { boundaryCalls: 1 } },
+    },
+    {
+      id: "commerce-cap",
+      title: "Authorization cap blocks the purchase",
+      category: "AUTHORIZATION",
+      evidenceTier: "REAL_LOCAL_DATABASE",
+      executorKey: "commerce.limit-exceeded",
+      expected: { terminalState: "DENIED", facts: { persistedEffect: false } },
+    },
+    {
+      id: "commerce-idempotency",
+      title: "Concurrent replay produces one provider effect",
+      category: "IDEMPOTENCY",
+      evidenceTier: "REAL_LOCAL_DATABASE",
+      executorKey: "commerce.idempotent-replay",
+      expected: { terminalState: "CONFIRMED", facts: { providerAttempts: 1 } },
+    },
+    {
+      id: "tenant-isolation",
+      title: "A second tenant cannot read the first tenant's products",
+      category: "ISOLATION",
+      evidenceTier: "REAL_LOCAL_DATABASE",
+      executorKey: "isolation.cross-tenant-catalog",
+      expected: { terminalState: "BLOCKED", facts: { visibleProducts: 0 } },
+    },
+    {
+      id: "privacy-redaction",
+      title: "Seeded PII reaches no response or audit surface",
+      category: "PRIVACY",
+      evidenceTier: "MODELLED",
+      executorKey: "boundary.pii-redaction",
+      expected: { terminalState: "PASS", facts: { rawPiiPresent: false } },
+    },
+    {
+      id: "storefront-ssrf",
+      title: "A public redirect to a private address is blocked",
+      category: "NETWORK_SECURITY",
+      evidenceTier: "MODELLED",
+      executorKey: "onboarding.ssrf-redirect",
+      expected: { terminalState: "BLOCKED", facts: { transportCalls: 1 } },
+    },
+  ],
+};

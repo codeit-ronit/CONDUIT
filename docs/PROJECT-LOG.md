@@ -414,3 +414,66 @@ compatibility with the bounded buyer.
 Build Phase 6 as a reproducible evidence system: versioned scenario expectations,
 hard-zero invariant graders, paired guardrail/control ablations, and a visible report
 that keeps scripted, modelled, referenced, and real evidence separate.
+
+## 2026-10-04 — Phase 6: evidence, evaluation, and red team
+
+### What we built
+
+- A clean `@conduit/evals` package for versioned manifests, observations, graders,
+  reports, hard-zero gates, generated invariants, and causal ablations.
+- Nine prewritten scenarios covering flawed totals, invalid model output, loops,
+  unsatisfiable intent, spending caps, concurrent replay, tenant isolation, PII, and
+  redirect SSRF.
+- Five hard-zero counts that fail the suite at any value above zero.
+- Paired scripted attacks with all controls on, all controls off, and one control
+  removed at a time.
+- Ablation arms that call the production redactor, boundary policy, and purchase policy
+  when enabled, without adding unsafe flags to application code.
+- `pnpm eval:safety`, a PostgreSQL CI gate, and a Phase 6 Evidence Lab in the live demo.
+- 2,500 generated money, ledger, and fail-closed policy cases per pure test run using
+  pinned fast-check 4.10.2.
+
+### Decisions and why
+
+- **Expected before observed.** Changing target behavior is a reviewable manifest edit.
+- **Hard zero means zero.** One duplicate effect or PII leak cannot be averaged away.
+- **A/B proves relevance.** Controls-on success is paired with an arm where the same
+  attack demonstrably lands.
+- **No unsafe production switch.** Bypass exists only in the evaluation package.
+- **Evidence tiers remain separate.** Scripted evidence is not live-model quality.
+- **L1 is not authority.** A model may be fooled; L3 and L4 must remain zero.
+
+### Bugs and learning found by evidence
+
+- The first live run failed three scenarios because the observer demanded a commit
+  outcome when a safe early stop correctly represented “no commit” as `null`. The
+  adapter was fixed; expected safety outcomes were not weakened.
+- The first ablation duplicated redaction and policy behavior. It was strengthened to
+  invoke production control functions in enabled arms.
+- Workspace relinking exposed that a package using Node APIs must declare Node types
+  directly; transitive type availability is not a package contract.
+
+### Baseline evidence
+
+- Safety report: 9 passed, 0 failed; all five hard-zero metrics are zero.
+- All controls on: L1=2, L3=0, L4=0.
+- All controls off: L1=2, L3=1, L4=1.
+- Redaction removed alone: L3=1, demonstrating a causal protection.
+- Property tests generate 2,500 invariant cases per run and shrink failures.
+- `pnpm check` passes 70 pure tests across 18 files and all builds.
+- `pnpm db:check` passes 24 live PostgreSQL tests across six files.
+- `pnpm eval:safety` exits successfully with the complete JSON evidence report.
+
+### Honest limits
+
+- The adversary is scripted; live-model novel-payload coverage is not measured.
+- Tests are not formal proof of policy completeness.
+- SSRF uses a controlled transport and does not contact private infrastructure.
+- PII detection remains heuristic; production needs an encrypted token vault.
+- Payments remain modelled; Razorpay or another provider is not part of this phase.
+
+### Next action
+
+Build Phase 7's buyer/merchant product surfaces and authenticated protocol adapter,
+carrying evidence tiers into every claim. Start with UCP compatibility research; keep
+live-provider and live-model validation separate.

@@ -25,6 +25,7 @@
     "db:up": "docker compose up -d --wait postgres",
     "demo:commerce": "dotenv -e .env -- pnpm --filter @conduit/walking-skeleton demo",
     "demo:web": "dotenv -e .env -- pnpm --filter @conduit/trust-demo start",
+    "eval:safety": "dotenv -e .env -- pnpm --filter @conduit/trust-demo evaluate",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

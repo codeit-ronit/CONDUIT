@@ -1,0 +1,22 @@
+{
+  "name": "@conduit/evals",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@conduit/domain": "workspace:*",
+    "@conduit/enforcement": "workspace:*",
+    "@conduit/observability": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.4",
+    "fast-check": "4.10.2"
+  }
+}

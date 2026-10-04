@@ -48,6 +48,24 @@ Graph facts become mapped fields. Descriptions remain untrusted prose. A file or
 can therefore contribute data, but it cannot silently expand its authority into price
 changes, private-network access, or autonomous model writes.
 
+## The evidence layer
+
+`@conduit/evals` depends on domain/security modules but no production module depends on
+it. It turns existing executable stories into observations and compares them with a
+versioned manifest:
+
+```text
+manifest (expected first) + scenario executor → observation → exact grader
+                                                        │
+                                                        ├── per-scenario evidence
+                                                        └── hard-zero build gate
+```
+
+The red-team path runs a deterministic adversarial stand-in against production redaction
+and policy functions. Unsafe variants exist only in the evaluation package; there is no
+deployable flag that disables controls. Reports keep `SCRIPTED`, `MODELLED`,
+`REAL_LOCAL_DATABASE`, and `LIVE_MODEL` evidence separate.
+
 ## The bounded buyer loop
 
 The model has two jobs: propose typed intent and propose one next action. It does not

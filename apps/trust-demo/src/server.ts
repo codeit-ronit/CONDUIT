@@ -10,6 +10,11 @@ import type { AgentScenarioName } from "./agent-scenarios.js";
 import { boundaryScenarioNames, runBoundaryScenario } from "./boundary-scenarios.js";
 import type { BoundaryScenarioName } from "./boundary-scenarios.js";
 import {
+  evaluationScenarioNames,
+  runEvaluationScenario,
+} from "./evaluation-scenarios.js";
+import type { EvaluationScenarioName } from "./evaluation-scenarios.js";
+import {
   onboardingScenarioNames,
   runOnboardingScenario,
 } from "./onboarding-scenarios.js";
@@ -37,12 +42,13 @@ async function handleRequest(
     if (request.method === "GET" && url.pathname === "/api/overview") {
       json(response, 200, {
         claimLevel: "MODELLED",
-        phase: 5,
+        phase: 6,
         scenarios: {
           commerce: scenarioNames,
           boundary: boundaryScenarioNames,
           agent: agentScenarioNames,
           onboarding: onboardingScenarioNames,
+          evaluation: evaluationScenarioNames,
         },
         phases: [
           {
@@ -70,8 +76,24 @@ async function handleRequest(
             title: "Merchant onboarding",
             adds: "Reviewed imports, provenance, merge-only catalog writes",
           },
+          {
+            phase: 6,
+            title: "Evidence and red team",
+            adds: "Versioned expectations, hard-zero gates, A/B control ablations",
+          },
         ],
       });
+      return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/evaluations/")) {
+      const name = url.pathname.slice(
+        "/api/evaluations/".length,
+      ) as EvaluationScenarioName;
+      if (!evaluationScenarioNames.includes(name)) {
+        json(response, 404, { error: "Unknown evaluation scenario" });
+        return;
+      }
+      json(response, 200, await runEvaluationScenario(pool, name));
       return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/agent/")) {

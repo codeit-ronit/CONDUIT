@@ -20,6 +20,7 @@ only a live sandbox check is evidence of live behaviour.
 | OpenAI output    | The Responses API supports strict Structured Outputs through `text.format`; every object needs `additionalProperties: false`, and applications must handle refusal/incomplete output. | Use strict JSON Schema in the live adapter, then validate locally; treat refusal or incomplete output as a stopped run.          | Referenced        |
 | Storefront data  | A live Allbirds page exposed a schema.org `ProductGroup` with SKU, Offer price/currency, brand, description, availability, and linked variants.                                       | Support standards-based Product and ProductGroup extraction; never add retailer-specific prose guessing.                         | Real + Referenced |
 | XLSX parser      | ExcelJS 4.4.0 is the current published release and supports loading workbook data from a buffer.                                                                                      | Pin 4.4.0 and keep file-size/row/column limits around the parser.                                                                | Referenced        |
+| Property testing | fast-check 4.10.2 is the current published release; it is test-runner agnostic and documents Vitest compatibility.                                                                    | Pin 4.10.2 for generated money, ledger, and fail-closed policy invariants with shrinking.                                        | Referenced        |
 
 ## Primary sources
 
@@ -37,6 +38,8 @@ only a live sandbox check is evidence of live behaviour.
 - [Schema.org ProductGroup](https://schema.org/ProductGroup)
 - [ExcelJS releases](https://github.com/exceljs/exceljs/releases)
 - [Phase 5 public storefront validation](PHASE-5-PUBLIC-STOREFRONT-VALIDATION.md)
+- [fast-check documentation](https://fast-check.dev/)
+- [fast-check releases](https://github.com/dubzzz/fast-check/releases)
 
 ## Facts still requiring live validation
 

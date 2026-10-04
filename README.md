@@ -27,11 +27,11 @@ architecture.
 
 ## Current status
 
-**Phase 5: reviewed merchant onboarding.** CSV/XLSX and structured-storefront imports
-now produce durable previews, exact confirmation fingerprints, row-level reasons,
-merge-only writes, and field provenance. SSRF-safe fetching and human-reviewed AI
-enrichment are operational. Payment and tool effects remain explicitly MODELLED; no real
-money moves.
+**Phase 6: measurable safety evidence.** A versioned nine-scenario manifest, hard-zero
+regression gates, generated invariants, paired red-team attacks, and one-control
+ablations are operational. The controls-on arm keeps L3/L4 at zero; the controls-off arm
+proves the scripted attacks can land. Payment remains explicitly MODELLED; no real money
+moves.
 
 ## Local setup
 
@@ -50,9 +50,14 @@ pnpm demo:web
 ```
 
 Then open <http://127.0.0.1:4310>. Switch among **Purchase safety**, **Tool boundary**,
-**AI buyer**, and **Onboarding**. The onboarding workspace visualizes a no-write
-spreadsheet preview, protected existing price, structured storefront import, blocked
-SSRF redirect, provenance, and reviewed AI enrichment.
+**AI buyer**, **Onboarding**, and **Evidence**. The Evidence workspace runs prewritten
+PostgreSQL-backed regressions and compares attacks with controls on, off, and ablated.
+
+For the machine-readable safety gate:
+
+```bash
+pnpm eval:safety
+```
 
 To enable the real model adapter, add `OPENAI_API_KEY` and an explicit `OPENAI_MODEL` to
 your local `.env`. The key stays on the server and must never be committed.

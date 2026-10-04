@@ -197,6 +197,12 @@ operational. A dated public storefront imported successfully into a fresh local 
 
 ## Phase 6 — evidence, evaluation, and red team
 
+**Status: complete on 2026-10-04.** A separate evaluation package now owns a versioned,
+prewritten nine-scenario manifest; hard-zero graders; evidence tiers; property-based
+invariants; paired injection trials; and one-control ablations. The CLI, CI integration
+suite, and visual Evidence Lab execute the same report. All safety scenarios pass with
+zero hard violations, while the controls-off arm demonstrates one L3 and one L4 success.
+
 **Build**
 
 - Versioned scenario dataset whose expected results are written before runs.
@@ -245,7 +251,8 @@ operational. A dated public storefront imported successfully into a fresh local 
 
 ## Immediate next step
 
-Begin Phase 6 with a versioned evaluation manifest and hard-zero safety graders. First,
-turn the existing wrong-total, schema failure, loop, SSRF, tenant, concurrency, and PII
-stories into one reproducible report. Then add paired injection and control-ablation
-experiments. Live OpenAI comparison remains optional until credentials are configured.
+Begin Phase 7 with presentable buyer and merchant consoles, an authenticated protocol
+surface, and explicit REAL / MODELLED / SCRIPTED / REFERENCED evidence labels. Research
+and implement UCP compatibility at an adapter boundary before considering ACP/AP2.
+Live-model comparison and a real payment sandbox remain separate, credential-dependent
+validation tracks.

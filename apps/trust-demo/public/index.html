@@ -23,21 +23,21 @@
     <main>
       <section class="hero">
         <div>
-          <p class="eyebrow">PHASE 05 · INTERACTIVE BUILD</p>
-          <h1>Bring a catalog.<br />Keep control of truth.</h1>
+          <p class="eyebrow">PHASE 06 · INTERACTIVE BUILD</p>
+          <h1>Don't trust a safety claim.<br />Measure it.</h1>
           <p class="hero-copy">
-            Preview messy files and storefront facts before they become products. Every
-            field keeps its source, every skipped row explains why, and imports never
-            overwrite an existing price.
+            Run fixed expectations against real database workflows. Hard safety metrics
+            must stay exactly zero, and paired attacks show which control actually made
+            the difference.
           </p>
         </div>
         <div class="hero-orbit" aria-hidden="true">
           <div class="orbit-ring ring-one"></div>
           <div class="orbit-ring ring-two"></div>
-          <div class="core">CATALOG<br />TRUTH</div>
-          <span class="node n1">PREVIEW</span>
-          <span class="node n2">CONFIRM</span>
-          <span class="node n3">PROVENANCE</span>
+          <div class="core">EVIDENCE<br />GATE</div>
+          <span class="node n1">EXPECTED</span>
+          <span class="node n2">HARD ZERO</span>
+          <span class="node n3">ABLATE</span>
         </div>
       </section>
 
@@ -83,11 +83,20 @@
             <span class="phase-state">BUILT</span>
           </article>
           <div class="phase-arrow">→</div>
-          <article class="phase-card active newest">
+          <article class="phase-card done">
             <span class="phase-number">05</span>
             <div>
               <h3>Merchant onboarding</h3>
               <p>Preview · provenance · merge-only · safe storefronts</p>
+            </div>
+            <span class="phase-state">BUILT</span>
+          </article>
+          <div class="phase-arrow">→</div>
+          <article class="phase-card active newest">
+            <span class="phase-number">06</span>
+            <div>
+              <h3>Evidence and red team</h3>
+              <p>Expected outcomes · hard-zero gates · A/B ablations</p>
             </div>
             <span class="phase-state">NOW</span>
           </article>
@@ -107,11 +116,14 @@
             <button class="lab-tab" data-lab="commerce" role="tab">
               Purchase safety
             </button>
-            <button class="lab-tab active" data-lab="boundary" role="tab">
+            <button class="lab-tab" data-lab="boundary" role="tab">
               Tool boundary
             </button>
             <button class="lab-tab" data-lab="agent" role="tab">AI buyer</button>
             <button class="lab-tab" data-lab="onboarding" role="tab">Onboarding</button>
+            <button class="lab-tab active" data-lab="evaluation" role="tab">
+              Evidence
+            </button>
           </div>
           <div class="scenario-list hidden" data-list="commerce" role="list">
             <button class="scenario" data-scenario="authorized">
@@ -150,7 +162,7 @@
               >
             </button>
           </div>
-          <div class="scenario-list" data-list="boundary" role="list">
+          <div class="scenario-list hidden" data-list="boundary" role="list">
             <button class="scenario active" data-scenario="trusted-read">
               <span class="scenario-icon">T</span>
               <span
@@ -262,8 +274,24 @@
               >
             </button>
           </div>
+          <div class="scenario-list" data-list="evaluation" role="list">
+            <button class="scenario active" data-scenario="safety-regression">
+              <span class="scenario-icon">0</span>
+              <span
+                ><strong>Safety regression</strong
+                ><small>Nine prewritten expectations</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="red-team-ablation">
+              <span class="scenario-icon">A/B</span>
+              <span
+                ><strong>Red-team ablation</strong
+                ><small>Controls on, off, and isolated</small></span
+              >
+            </button>
+          </div>
           <button id="run-button" class="run-button">
-            Run trust-labelled read <span>→</span>
+            Run safety regression <span>→</span>
           </button>
         </aside>
 
@@ -279,7 +307,7 @@
           </div>
           <div id="loading-state" class="loading-state hidden">
             <div class="scanner"></div>
-            <p>Running the real transaction…</p>
+            <p>Running the evidence suite…</p>
           </div>
           <div id="result" class="hidden"></div>
         </section>

@@ -218,7 +218,7 @@ h1 {
 }
 .phase-track {
   display: grid;
-  grid-template-columns: 1fr 22px 1fr 22px 1fr 22px 1fr 22px 1fr;
+  grid-template-columns: 1fr 18px 1fr 18px 1fr 18px 1fr 18px 1fr 18px 1fr;
   align-items: center;
   margin-top: 26px;
 }
@@ -294,7 +294,7 @@ h1 {
 }
 .lab-tabs {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 4px;
   margin-top: 24px;
   padding: 4px;
@@ -316,6 +316,31 @@ h1 {
 .lab-tab.active {
   color: var(--ink);
   background: #222c25;
+}
+.metric-pass {
+  color: var(--lime);
+}
+.metric-fail {
+  color: var(--red);
+}
+.severity-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 12px;
+}
+.severity-row span {
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: var(--muted);
+  font:
+    11px ui-monospace,
+    monospace;
+}
+.severity-row strong {
+  float: right;
+  color: var(--ink);
 }
 .scenario {
   width: 100%;
@@ -851,6 +876,15 @@ footer {
   letter-spacing: 0.08em;
 }
 
+@media (max-width: 1180px) {
+  .phase-track {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .phase-arrow {
+    display: none;
+  }
+}
 @media (max-width: 900px) {
   .hero {
     grid-template-columns: 1fr;
@@ -899,7 +933,7 @@ footer {
     gap: 10px;
   }
   .phase-arrow {
-    transform: rotate(90deg);
+    display: none;
   }
   .scenario-list {
     grid-template-columns: 1fr;

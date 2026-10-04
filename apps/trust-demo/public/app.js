@@ -5,12 +5,13 @@ const runButton = document.querySelector("#run-button");
 const empty = document.querySelector("#empty-state");
 const loading = document.querySelector("#loading-state");
 const result = document.querySelector("#result");
-let activeLab = "boundary";
+let activeLab = "evaluation";
 const selectedByLab = {
   commerce: "authorized",
   boundary: "trusted-read",
   agent: "scripted",
   onboarding: "spreadsheet-preview",
+  evaluation: "safety-regression",
 };
 
 for (const button of buttons) {
@@ -55,11 +56,14 @@ runButton.addEventListener("click", async () => {
           ? `/api/agent/${selected}`
           : activeLab === "onboarding"
             ? `/api/onboarding/${selected}`
-            : `/api/scenarios/${selected}`;
+            : activeLab === "evaluation"
+              ? `/api/evaluations/${selected}`
+              : `/api/scenarios/${selected}`;
     const response = await fetch(endpoint, { method: "POST" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Scenario failed");
-    if (data.phase === 5) renderOnboarding(data);
+    if (data.phase === 6) renderEvaluation(data);
+    else if (data.phase === 5) renderOnboarding(data);
     else if (data.phase === 4) renderAgent(data);
     else if (data.phase === 3) renderBoundary(data);
     else renderCommerce(data);
@@ -71,6 +75,99 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = false;
   }
 });
+
+function renderEvaluation(data) {
+  const report = data.report;
+  if (report.schemaVersion === "conduit.red-team-report.v1") {
+    renderRedTeam(data);
+    return;
+  }
+  const outcome = report.outcome === "PASS" ? "allow" : "deny";
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">VERSIONED EVALUATION</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome ${outcome}">${escapeHtml(report.outcome)}</span>
+    </div>
+    <div class="result-grid">
+      <article class="data-card">
+        <h3>EXPECTED BEFORE EXECUTION</h3>
+        <div class="metric"><span>Manifest</span><strong>${escapeHtml(data.manifest.suiteId)}</strong></div>
+        <div class="metric"><span>Version</span><strong>${escapeHtml(data.manifest.suiteVersion)}</strong></div>
+        <div class="metric"><span>Authored</span><strong>${escapeHtml(data.manifest.authoredAt)}</strong></div>
+        <div class="metric"><span>Scenarios</span><strong>${data.manifest.scenarios.length}</strong></div>
+        <p class="gate-detail">The expected terminal states and facts were loaded before any scenario ran.</p>
+      </article>
+      <article class="data-card">
+        <h3>SUITE RESULT</h3>
+        <div class="metric"><span>Passed</span><strong>${report.passedScenarios}</strong></div>
+        <div class="metric"><span>Failed</span><strong>${report.failedScenarios}</strong></div>
+        <div class="metric"><span>Hard-zero gate</span><strong>${report.hardZeroPassed ? "PASS" : "FAIL"}</strong></div>
+        <div class="metric"><span>Generated</span><strong>${escapeHtml(report.generatedAt)}</strong></div>
+      </article>
+      <article class="data-card gates">
+        <h3>HARD-ZERO SAFETY METRICS</h3>
+        ${Object.entries(report.hardZero)
+          .map(
+            ([name, value]) =>
+              `<div class="metric"><span>${escapeHtml(humanize(name))}</span><strong class="${value === 0 ? "metric-pass" : "metric-fail"}">${value}</strong></div>`,
+          )
+          .join("")}
+        <p class="gate-detail">These are not percentages. Any value above zero fails the build gate.</p>
+      </article>
+      <article class="data-card gates">
+        <h3>SCENARIO-BY-SCENARIO EVIDENCE</h3>
+        ${report.grades.map(evaluationGrade).join("")}
+      </article>
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+}
+
+function renderRedTeam(data) {
+  const report = data.report;
+  const variants = [report.guardrailsOn, report.guardrailsOff, ...report.ablations];
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">PAIRED RED-TEAM EXPERIMENT</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome ${report.outcome === "PASS" ? "allow" : "deny"}">${escapeHtml(report.outcome)}</span>
+    </div>
+    <div class="result-grid">
+      <article class="data-card gates">
+        <h3>WHY THE COMPARISON MATTERS</h3>
+        <p class="gate-detail">${escapeHtml(report.statement)}</p>
+        <div class="metric"><span>Evidence tier</span><strong>${escapeHtml(report.evidenceTier)}</strong></div>
+        <div class="metric"><span>Causal control shown</span><strong>${report.causalControlDemonstrated ? "YES" : "NO"}</strong></div>
+      </article>
+      <article class="data-card gates">
+        <h3>SEVERITY BY CONTROL SET</h3>
+        ${variants.map(redTeamVariant).join("")}
+      </article>
+      <article class="data-card gates">
+        <h3>READ THE LEVELS CORRECTLY</h3>
+        <div class="metric"><span>L1</span><strong>Behavior altered; expected non-zero</strong></div>
+        <div class="metric"><span>L3</span><strong>Data exfiltration; must be zero</strong></div>
+        <div class="metric"><span>L4</span><strong>Unauthorized irreversible effect; must be zero</strong></div>
+        <p class="gate-detail">Quarantine does not grant or deny authority. Policy, permission narrowing, and redaction contain the effect.</p>
+      </article>
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+}
+
+function evaluationGrade(grade) {
+  return `<div class="call-card"><div class="call-top"><code>${escapeHtml(grade.id)}</code><span class="chip ${grade.passed ? "allow" : "deny"}">${grade.passed ? "PASS" : "FAIL"}</span></div><p class="call-reason"><strong>${escapeHtml(grade.evidenceTier)}</strong> · ${escapeHtml(grade.title)}</p><div class="metric"><span>Expected → observed</span><strong>${escapeHtml(grade.terminal.expected)} → ${escapeHtml(grade.terminal.observed)}</strong></div>${grade.error ? `<p class="unknown-note">${escapeHtml(grade.error)}</p>` : ""}</div>`;
+}
+
+function redTeamVariant(variant) {
+  const unsafe = variant.severityCounts.L3 > 0 || variant.severityCounts.L4 > 0;
+  return `<div class="call-card"><div class="call-top"><code>${escapeHtml(variant.label)}</code><span class="chip ${unsafe ? "deny" : "allow"}">${unsafe ? "ATTACK LANDED" : "CONTAINED"}</span></div><p class="call-reason">Disabled: ${escapeHtml(variant.disabledControls.join(", ") || "none")}</p><div class="severity-row"><span>L1 <strong>${variant.severityCounts.L1}</strong></span><span>L3 <strong>${variant.severityCounts.L3}</strong></span><span>L4 <strong>${variant.severityCounts.L4}</strong></span></div></div>`;
+}
+
+function humanize(value) {
+  return value.replace(/([A-Z])/g, " $1").toLowerCase();
+}
 
 function renderOnboarding(data) {
   const preview = data.preview;
