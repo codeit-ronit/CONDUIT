@@ -80,6 +80,7 @@ runButton.addEventListener("click", async () => {
     }
     if (!response.ok) throw new Error(data.error ?? "Scenario failed");
     if (data.surface === "BUYER_JOURNEY") renderJourney(data);
+    else if (data.surface === "UCP_CART_CHECKOUT") renderUcpShopping(data);
     else if (data.surface === "MERCHANT_CONSOLE") renderMerchant(data);
     else if (data.surface === "MCP_CATALOG") renderMcp(data);
     else if (data.phase === 7) renderProtocol(data);
@@ -281,6 +282,56 @@ function renderMcp(data) {
   wireRawToggle();
 }
 
+function renderUcpShopping(data) {
+  const stages = data.stages;
+  const checkout = stages.checkout.body;
+  const completed = stages.finalCheckout.body;
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">UCP 2026-08-25 · CART + CHECKOUT</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome allow">BUYER APPROVED</span>
+    </div>
+    <div class="claim-strip">
+      <span class="claim-token real">REAL LOCAL</span><span>PostgreSQL cart, checkout, idempotency, policy, ledger, order</span>
+      <span class="claim-token modelled">MODELLED</span><span>Payment provider; no external money moved</span>
+      <span class="claim-token referenced">NOT CLAIMED</span><span>Public UCP conformance</span>
+    </div>
+    <div class="result-grid">
+      <article class="data-card">
+        <h3>1 · SERVER-PRICED CART</h3>
+        <div class="metric"><span>HTTP result</span><strong>${stages.cart.status} CREATED</strong></div>
+        <div class="metric"><span>Lines</span><strong>${stages.cart.body.line_items.length}</strong></div>
+        <div class="metric"><span>Authoritative total</span><strong>${money({ currency: stages.cart.body.currency, minorUnits: String(stages.cart.body.totals.at(-1).amount) })}</strong></div>
+        <p class="gate-detail">The platform sent product IDs and quantities. CONDUIT loaded titles and prices from its own catalog.</p>
+      </article>
+      <article class="data-card">
+        <h3>2 · RETRY CONTRACT</h3>
+        <div class="metric"><span>Same key + same body</span><strong>${stages.idempotentReplay.replayed ? "CACHED RESULT" : "FAILED"}</strong></div>
+        <div class="metric"><span>Same key + changed body</span><strong>${stages.mismatchedReplay.status} CONFLICT</strong></div>
+        <p class="gate-detail">A network retry cannot create another cart, and a reused key cannot silently mean a different purchase.</p>
+      </article>
+      <article class="data-card gates">
+        <h3>3 · AGENT STOPS AT HANDOFF</h3>
+        <div class="metric"><span>Checkout state</span><strong>${escapeHtml(checkout.status)}</strong></div>
+        <div class="metric"><span>Message severity</span><strong>${escapeHtml(checkout.messages[0].severity)}</strong></div>
+        <div class="metric"><span>Agent complete attempt</span><strong>${escapeHtml(stages.agentCompleteBeforeReview.body.status)}</strong></div>
+        <p class="unknown-note">The agent can prepare the basket. It cannot click the buyer’s final approval.</p>
+      </article>
+      <article class="data-card gates">
+        <h3>4 · TRUSTED UI PLACES ORDER</h3>
+        <div class="metric"><span>Final state</span><strong>${escapeHtml(completed.status)}</strong></div>
+        <div class="metric"><span>Order ID</span><strong>${escapeHtml(completed.order.id)}</strong></div>
+        <div class="metric"><span>Concurrent approvals</span><strong>ONE ORDER · SAME RESULT</strong></div>
+        <div class="metric"><span>External money</span><strong>NO — MODELLED PROVIDER</strong></div>
+        <p class="gate-detail">The browser approval reuses the existing authorization, live repricing, stock reservation, drawdown ledger, policy, and durable provider workflow.</p>
+        <a class="secondary-button" target="_blank" rel="noreferrer" href="${escapeHtml(checkout.continue_url)}">Open trusted checkout receipt ↗</a>
+      </article>
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+}
+
 function claimClass(claim) {
   if (claim === "REAL_LOCAL_DATABASE") return "real";
   if (claim === "MODELLED") return "modelled";
@@ -301,7 +352,11 @@ function renderProtocol(data) {
     : data.catalog
       ? { label: "AUTHENTICATED", className: "allow" }
       : { label: "DISCOVERABLE", className: "warn" };
-  const capability = "dev.ucp.shopping.catalog.search";
+  const capabilities = Object.keys(
+    data.businessProfile?.ucp?.capabilities ?? {
+      "dev.ucp.shopping.catalog.search": [],
+    },
+  );
   result.innerHTML = `
     <div class="result-head">
       <div><p class="eyebrow">UCP 2026-08-25 · VERTICAL SLICE</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
@@ -316,9 +371,9 @@ function renderProtocol(data) {
       <article class="data-card">
         <h3>1 · DISCOVERY PROFILE</h3>
         <div class="metric"><span>Protocol release</span><strong>${escapeHtml(data.implementation?.pinnedRelease)}</strong></div>
-        <div class="metric"><span>Advertised capability</span><strong>${escapeHtml(capability)}</strong></div>
+        <div class="metric"><span>Advertised capabilities</span><strong>${escapeHtml(capabilities.join(" · "))}</strong></div>
         <div class="metric"><span>Conformance</span><strong>${escapeHtml(data.implementation?.conformance)}</strong></div>
-        <p class="gate-detail">Checkout and payments are deliberately absent because this protocol slice does not implement them yet.</p>
+        <p class="gate-detail">Catalog, cart, and checkout are implemented. Payment handlers remain absent because the current provider is only a local model.</p>
       </article>
       <article class="data-card">
         <h3>2 · IDENTITY + NEGOTIATION</h3>

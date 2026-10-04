@@ -224,9 +224,9 @@ zero hard violations, while the controls-off arm demonstrates one L3 and one L4 
 **Status: in progress from 2026-10-04.** Slice 1 adds a version-pinned UCP `2026-08-25`
 catalog boundary. Slice 2 adds a complete evidence-labelled buyer journey and
 authenticated MCP catalog. Slice 3 adds a merchant catalog/provenance console with
-durable, revocable, session-derived merchant scope. Buyer and merchant comprehension
-surfaces now exist; production identity, checkout interoperability, and dated provider
-validation remain open.
+durable, revocable, session-derived merchant scope. Slice 4 adds UCP cart and checkout,
+payload-bound idempotency, and trusted buyer handoff over the canonical trust kernel.
+Production identity, official conformance, and dated provider validation remain open.
 
 **Build**
 
@@ -258,7 +258,7 @@ validation remain open.
 
 ## Immediate next step
 
-Build Phase 7 slice 4: research and implement UCP cart/checkout only with current schema
-validation, finalization, idempotency, and recovery tests. Live-model comparison,
-production identity, and a real payment sandbox remain separate, credential-dependent
-validation tracks.
+Build the durable order read model, then validate a chosen payment provider in its live
+sandbox with webhook, timeout, reconciliation, and refund evidence. Keep official UCP
+conformance, production identity, and live-model comparison as separate validation
+tracks.

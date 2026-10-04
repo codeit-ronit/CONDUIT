@@ -5,6 +5,7 @@ import { createDatabasePool } from "@conduit/infrastructure";
 import { runJourneyScenario } from "../src/journey-scenarios.js";
 import { createMcpDemoSurface } from "../src/mcp-demo-surface.js";
 import { runProtocolScenario } from "../src/protocol-scenarios.js";
+import { createUcpShoppingDemoSurface } from "../src/ucp-shopping-surface.js";
 
 const pool = createDatabasePool();
 
@@ -65,6 +66,43 @@ describe("Phase 7 UCP protocol slice", () => {
     } finally {
       await surface.close();
     }
+  });
+
+  it("keeps UCP checkout behind trusted buyer review and caches matching retries", async () => {
+    const surface = await createUcpShoppingDemoSurface(pool, "http://127.0.0.1:4310");
+    const result = await surface.runRoundTrip();
+
+    expect(result).toMatchObject({
+      surface: "UCP_CART_CHECKOUT",
+      protocol: {
+        version: "2026-08-25",
+        capabilities: ["dev.ucp.shopping.cart", "dev.ucp.shopping.checkout"],
+      },
+      stages: {
+        cart: { status: 201, body: { currency: "INR" } },
+        idempotentReplay: { status: 201, replayed: true },
+        mismatchedReplay: {
+          status: 409,
+          body: { code: "idempotency_key_reused" },
+        },
+        checkout: {
+          status: 201,
+          body: { status: "requires_escalation" },
+        },
+        agentCompleteBeforeReview: {
+          body: { status: "requires_escalation" },
+        },
+        trustedUiApproval: { body: { status: "completed" } },
+        concurrentApprovalReplay: { body: { status: "completed" } },
+        finalCheckout: { body: { status: "completed" } },
+      },
+      claims: {
+        databaseAndTrustChecks: "REAL_LOCAL_DATABASE",
+        paymentProvider: "MODELLED_NO_EXTERNAL_MONEY",
+        publicUcpConformance: "NOT_CLAIMED",
+        bearerSecretReturnedToBrowser: false,
+      },
+    });
   });
 
   it("links the complete buyer journey to durable commit evidence", async () => {

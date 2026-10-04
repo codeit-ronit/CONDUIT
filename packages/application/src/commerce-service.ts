@@ -100,6 +100,32 @@ export class CommerceService {
     );
   }
 
+  public replaceCartLines(input: {
+    readonly tenantId: string;
+    readonly cartId: string;
+    readonly lines: readonly {
+      readonly productId: string;
+      readonly quantity: number;
+    }[];
+  }): Promise<PricedCart> {
+    const seen = new Set<string>();
+    const lines = input.lines.map((line) => {
+      if (seen.has(line.productId)) {
+        throw new Error("A cart cannot contain the same product twice");
+      }
+      seen.add(line.productId);
+      return {
+        productId: productId(line.productId),
+        quantity: cartQuantity(line.quantity),
+      };
+    });
+    return this.repository.replaceCartLines(
+      tenantId(input.tenantId),
+      cartId(input.cartId),
+      lines,
+    );
+  }
+
   public removeCartLine(
     input: CartCommandInput & { readonly productId: string },
   ): Promise<PricedCart> {

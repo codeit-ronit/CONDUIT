@@ -2,6 +2,8 @@ import type { UcpProfile } from "./types.js";
 
 export const UCP_VERSION = "2026-08-25";
 export const UCP_CATALOG_SEARCH = "dev.ucp.shopping.catalog.search";
+export const UCP_CART = "dev.ucp.shopping.cart";
+export const UCP_CHECKOUT = "dev.ucp.shopping.checkout";
 
 export function createUcpBusinessProfile(baseUrl: string): UcpProfile {
   const origin = new URL(baseUrl).origin;
@@ -32,6 +34,20 @@ export function createUcpBusinessProfile(baseUrl: string): UcpProfile {
             version: UCP_VERSION,
             spec: `https://ucp.dev/${UCP_VERSION}/specification/shopping/catalog/search/`,
             schema: `https://ucp.dev/${UCP_VERSION}/schemas/shopping/catalog_search.json`,
+          },
+        ],
+        [UCP_CART]: [
+          {
+            version: UCP_VERSION,
+            spec: `https://ucp.dev/${UCP_VERSION}/specification/shopping/cart/`,
+            schema: `https://ucp.dev/${UCP_VERSION}/schemas/shopping/cart.json`,
+          },
+        ],
+        [UCP_CHECKOUT]: [
+          {
+            version: UCP_VERSION,
+            spec: `https://ucp.dev/${UCP_VERSION}/specification/shopping/checkout/`,
+            schema: `https://ucp.dev/${UCP_VERSION}/schemas/shopping/checkout.json`,
           },
         ],
       },

@@ -201,8 +201,8 @@ problem, changes independently, and must carry its own version and conformance e
 
 ### First UCP vertical slice
 
-`@conduit/protocol-adapters` now owns a UCP `2026-08-25` catalog-search projection. The
-discovery profile advertises only that capability. Protected work follows this order:
+`@conduit/protocol-adapters` owns UCP `2026-08-25` catalog, cart, and checkout
+projections. Protected work follows this order:
 
 ```text
 Bearer credential → UCP-Agent identity binding → exact version intersection
@@ -213,7 +213,27 @@ Bearer credential → UCP-Agent identity binding → exact version intersection
 The adapter depends on the domain shape; domain and application code do not depend on
 UCP. The local profile is inspectable at `/.well-known/ucp`, but localhost HTTP and the
 absence of an official schema/conformance run mean conformance is explicitly not
-claimed. Checkout and payment handlers are not advertised.
+claimed. Cart and checkout are advertised; payment handlers remain absent.
+
+### UCP cart and checkout path
+
+```text
+API key + UCP-Agent → identity-bound cart → atomic server-side pricing
+                                        ↓
+                         one durable checkout per cart
+                                        ↓
+                  requires_escalation + signed continue_url
+                                        ↓
+                         trusted browser buyer review
+                                        ↓
+                 existing trusted commit + durable order evidence
+```
+
+UCP records contain protocol lifecycle and ownership links, not copied commerce truth.
+Catalog price, inventory, authorization, drawdown, order, and provider state stay
+canonical. Each mutating operation uses a principal/operation/key advisory lock and a
+canonical request digest. Matching retries receive the stored response; changed payloads
+receive 409. The modelled provider is not advertised as a payment handler.
 
 ### Authenticated MCP catalog transport
 

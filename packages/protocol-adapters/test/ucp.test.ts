@@ -1,8 +1,10 @@
-import { Money } from "@conduit/domain";
+import { Money, cartId, merchantId, productId, tenantId } from "@conduit/domain";
 import { describe, expect, it, vi } from "vitest";
 
 import {
   UCP_CATALOG_SEARCH,
+  UCP_CART,
+  UCP_CHECKOUT,
   UCP_VERSION,
   UcpAuthenticationError,
   UcpNegotiationError,
@@ -10,6 +12,8 @@ import {
   createUcpBusinessProfile,
   digestApiKey,
   negotiateUcpProfiles,
+  projectUcpCart,
+  projectUcpCheckout,
   searchUcpCatalog,
 } from "../src/index.js";
 import type { UcpApiKeyCredential, UcpProfile } from "../src/index.js";
@@ -26,13 +30,57 @@ const credential: UcpApiKeyCredential = {
 };
 
 describe("UCP adapter boundary", () => {
-  it("publishes only the capability this slice implements", () => {
+  it("publishes only the implemented catalog, cart, and checkout capabilities", () => {
     const profile = createUcpBusinessProfile("https://merchant.example/path");
     expect(profile.ucp.version).toBe(UCP_VERSION);
-    expect(Object.keys(profile.ucp.capabilities)).toEqual([UCP_CATALOG_SEARCH]);
+    expect(Object.keys(profile.ucp.capabilities)).toEqual([
+      UCP_CATALOG_SEARCH,
+      UCP_CART,
+      UCP_CHECKOUT,
+    ]);
     expect(profile.ucp.services["dev.ucp.shopping"]?.[0]?.endpoint).toBe(
       "https://merchant.example/api/ucp",
     );
+  });
+
+  it("projects server-priced carts and the trusted-review checkout state", () => {
+    const cart = {
+      id: cartId("11111111-1111-4111-8111-111111111111"),
+      tenantId: tenantId("22222222-2222-4222-8222-222222222222"),
+      merchantId: merchantId("33333333-3333-4333-8333-333333333333"),
+      status: "OPEN" as const,
+      lines: [
+        {
+          productId: productId("44444444-4444-4444-8444-444444444444"),
+          sku: "TEA-1",
+          displayName: "Assam Tea",
+          quantity: 2,
+          unitPrice: Money.fromMinorUnits("INR", 24_900n),
+          priceVersion: 1,
+          lineTotal: Money.fromMinorUnits("INR", 49_800n),
+        },
+      ],
+      total: Money.fromMinorUnits("INR", 49_800n),
+    };
+
+    expect(projectUcpCart(cart)).toMatchObject({
+      currency: "INR",
+      line_items: [{ item: { price: 24_900 }, quantity: 2 }],
+      totals: [{ amount: 49_800 }, { type: "total", amount: 49_800 }],
+    });
+    expect(
+      projectUcpCheckout({
+        id: "55555555-5555-4555-8555-555555555555",
+        cart,
+        status: "requires_escalation",
+        continueUrl: "https://merchant.example/checkout/555",
+        expiresAt: new Date("2030-01-01T00:00:00.000Z"),
+      }),
+    ).toMatchObject({
+      status: "requires_escalation",
+      continue_url: "https://merchant.example/checkout/555",
+      messages: [{ severity: "requires_buyer_review" }],
+    });
   });
 
   it("binds the API key principal to the declared UCP-Agent profile", () => {
@@ -40,11 +88,21 @@ describe("UCP adapter boundary", () => {
       authenticateUcpApiKey(
         {
           authorization: `Bearer ${secret}`,
-          ucpAgent: credential.agentProfile,
+          ucpAgent: `profile="${credential.agentProfile}"`,
         },
         [credential],
       ),
     ).toMatchObject({ tenantId: "tenant-1", merchantId: "merchant-1" });
+
+    expect(() =>
+      authenticateUcpApiKey(
+        {
+          authorization: `Bearer ${secret}`,
+          ucpAgent: 'profile="http://not-secure.example/profile"',
+        },
+        [credential],
+      ),
+    ).toThrow(UcpAuthenticationError);
 
     expect(() =>
       authenticateUcpApiKey(

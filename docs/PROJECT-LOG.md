@@ -652,3 +652,49 @@ separate evidence tracks.
 Research the current UCP cart and checkout contracts, then build the smallest adapter
 over CONDUIT's existing cart and trusted-commit state machines. Advertise it only after
 schema, finalization, idempotency, failure, and recovery tests pass.
+
+## 2026-10-04 — Phase 7 slice 4: UCP cart and trusted checkout handoff
+
+### What we built
+
+- UCP `2026-08-25` cart and checkout validation and response projection using integer
+  minor units and capability-specific envelopes.
+- Authenticated, principal-bound cart create/get/full-replace/cancel and checkout
+  create/get/update/complete/cancel routes under `/api/ucp`.
+- Atomic full cart replacement over the canonical commerce repository.
+- PostgreSQL cart ownership, checkout lifecycle, and 24-hour payload-bound idempotency
+  records; both local databases now have seven migrations.
+- One-checkout-per-cart conversion, six-hour expiry, signed review links with only token
+  digests persisted, and same-origin buyer approval.
+- A no-store, strict-Content-Security-Policy buyer checkout page reached through the
+  generated `continue_url`; it shows server-priced lines and owns final approval.
+- Trusted finalization through the existing live-reprice, authorization, policy, stock,
+  ledger, order, outbox, and modelled-provider workflow.
+- A visual scenario showing a cached retry, changed-payload conflict, blocked agent
+  completion, buyer handoff, and completed order.
+
+### Decisions and why
+
+- **Reuse the trust kernel.** UCP is an adapter, not another pricing or order source.
+- **Buyer review is authority.** Without AP2 Mandates, the agent prepares but cannot
+  place the order.
+- **Bind resources to identity.** A guessed ID is insufficient; tenant, merchant,
+  principal, and agent profile must match.
+- **Bind retries to payloads.** Matching retries return cached output; changed meaning
+  under the same key returns 409.
+- **Do not invent a payment-handler claim.** The provider moves no external money.
+
+### Evidence and honest limits
+
+- `pnpm test` passes 79 pure tests across 21 files.
+- `pnpm db:check` applies all seven migrations idempotently and passes 31 PostgreSQL
+  tests across eight files.
+- Public TLS 1.3, official conformance, production identity, message signatures, legal
+  links, fulfillment, tax, confirmation email, real payment, refunds, and a production
+  order API remain open.
+
+### Next action
+
+Build the durable order read model. Then validate a chosen provider's real sandbox,
+webhook/reconciliation, timeout, decline, and refund behavior as a separate evidence
+track.

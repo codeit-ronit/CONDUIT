@@ -48,7 +48,8 @@ export function authenticateUcpBearer(
 }
 
 export function bindUcpAgent(credential: UcpPrincipal, ucpAgent: string): UcpPrincipal {
-  if (credential.agentProfile !== ucpAgent) {
+  const declaredProfile = parseUcpAgentProfile(ucpAgent);
+  if (credential.agentProfile !== declaredProfile) {
     throw new UcpAuthenticationError(
       "Credential and UCP-Agent profile do not identify the same principal",
     );
@@ -60,6 +61,16 @@ export function bindUcpAgent(credential: UcpPrincipal, ucpAgent: string): UcpPri
     merchantId: credential.merchantId,
     agentProfile: credential.agentProfile,
   };
+}
+
+/** REST uses an RFC 8941 dictionary; MCP metadata carries the profile value directly. */
+export function parseUcpAgentProfile(value: string): string {
+  if (value.startsWith("https://")) return value;
+  const match = /^profile="(https:\/\/[^"\\]+)"$/u.exec(value.trim());
+  if (!match?.[1]) {
+    throw new UcpAuthenticationError("UCP-Agent is not a valid profile field");
+  }
+  return match[1];
 }
 
 function bearerSecret(authorization: string | undefined): string | undefined {

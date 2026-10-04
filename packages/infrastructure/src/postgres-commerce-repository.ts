@@ -360,6 +360,52 @@ export class PostgresCommerceRepository implements CommerceRepository {
     return this.getCart(scopedTenantId, scopedCartId);
   }
 
+  public async replaceCartLines(
+    scopedTenantId: TenantId,
+    scopedCartId: CartId,
+    lines: readonly { readonly productId: ProductId; readonly quantity: number }[],
+  ): Promise<PricedCart> {
+    return this.transaction(async (client) => {
+      const headerResult = await client.query<CartHeaderRow>(
+        `${cartHeaderQuery(false)} FOR UPDATE`,
+        [scopedTenantId, scopedCartId],
+      );
+      const header = headerResult.rows[0];
+      if (!header) {
+        throw new CommerceError("CART_NOT_FOUND", "Cart does not exist");
+      }
+      if (header.status !== "OPEN") {
+        throw new CommerceError("CART_NOT_OPEN", "Cart is already being processed");
+      }
+
+      await client.query(
+        `DELETE FROM conduit.cart_lines WHERE tenant_id = $1 AND cart_id = $2`,
+        [scopedTenantId, scopedCartId],
+      );
+      for (const line of lines) {
+        const inserted = await client.query(
+          `INSERT INTO conduit.cart_lines (
+             tenant_id, merchant_id, cart_id, product_id, quantity
+           )
+           SELECT c.tenant_id, c.merchant_id, c.id, p.id, $4
+           FROM conduit.carts c
+           JOIN conduit.products p
+             ON p.tenant_id = c.tenant_id AND p.merchant_id = c.merchant_id
+           WHERE c.tenant_id = $1 AND c.id = $2 AND c.status = 'OPEN'
+             AND p.id = $3 AND p.active = true`,
+          [scopedTenantId, scopedCartId, line.productId, line.quantity],
+        );
+        if (inserted.rowCount !== 1) {
+          throw new CommerceError(
+            "PRODUCT_NOT_FOUND",
+            "Product does not exist for this merchant",
+          );
+        }
+      }
+      return this.getCartWithClient(client, scopedTenantId, scopedCartId);
+    });
+  }
+
   public async getCart(
     scopedTenantId: TenantId,
     scopedCartId: CartId,

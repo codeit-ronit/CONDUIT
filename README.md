@@ -27,12 +27,13 @@ architecture.
 
 ## Current status
 
-**Phase 7, slice 3: buyer and merchant product surfaces.** The buyer journey explains
-authorization → selection → trusted commit → modelled payment → durable receipt. The new
-merchant console uses a revocable PostgreSQL session to show only its scoped products,
-current price/stock, and field-level import provenance. Authenticated MCP catalog access
-remains available. Production identity and full UCP conformance are not claimed; payment
-remains MODELLED and no real money moves.
+**Phase 7, slice 4: buyer, merchant, and interoperable checkout surfaces.** The buyer
+journey explains authorization → selection → trusted commit → modelled payment → durable
+receipt. The new merchant console uses a revocable PostgreSQL session to show only its
+scoped products, current price/stock, and field-level import provenance. Authenticated
+MCP catalog access remains available. UCP cart and checkout now add durable idempotency
+and trusted buyer handoff over the same trust kernel. Production identity and full UCP
+conformance are not claimed; payment remains MODELLED and no real money moves.
 
 ## Local setup
 
@@ -52,8 +53,9 @@ pnpm demo:web
 
 Then open <http://127.0.0.1:4310>. Start with **Buyer journey**, then open **Merchant
 console** and use the prefilled local demo credentials. **UCP + MCP** shows discovery,
-authenticated MCP catalog access, and fail-closed identity/version paths. Earlier
-safety, AI, onboarding, and evaluation labs remain available.
+authenticated MCP catalog access, cart-to-checkout buyer handoff, and fail-closed
+identity/version paths. Earlier safety, AI, onboarding, and evaluation labs remain
+available.
 
 For the machine-readable safety gate:
 

@@ -47,7 +47,7 @@ describe("PostgreSQL foundation", () => {
 
     expect(schema.rows[0]?.exists).toBe(true);
     expect(extension.rows[0]?.exists).toBe(true);
-    expect(migrations.rows[0]?.count).toBe("6");
+    expect(migrations.rows[0]?.count).toBe("7");
   });
 
   it("rolls back an incomplete transaction without leaving state", async () => {

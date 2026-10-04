@@ -189,7 +189,7 @@ const titles: Record<ProtocolScenarioName, string> = {
 
 const lessons: Record<ProtocolScenarioName, string> = {
   "profile-discovery":
-    "The machine-readable profile advertises only catalog search, not checkout or payment behavior that this slice has not implemented.",
+    "The machine-readable profile now advertises catalog, cart, and checkout; payment handlers stay absent because no real handler has been implemented.",
   "authenticated-catalog":
     "The API key is bound to one agent profile and one tenant/merchant scope before real PostgreSQL catalog data is projected into the UCP catalog shape.",
   "identity-mismatch":

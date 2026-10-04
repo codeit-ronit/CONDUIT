@@ -33,6 +33,7 @@ import { protocolScenarioNames, runProtocolScenario } from "./protocol-scenarios
 import type { ProtocolScenarioName } from "./protocol-scenarios.js";
 import { runScenario, scenarioNames } from "./scenarios.js";
 import type { ScenarioName } from "./scenarios.js";
+import { createUcpShoppingDemoSurface } from "./ucp-shopping-surface.js";
 
 const pool = createDatabasePool();
 const publicDirectory = fileURLToPath(new URL("../public/", import.meta.url));
@@ -40,6 +41,7 @@ const port = Number(process.env.PORT ?? "4310");
 const publicBaseUrl = process.env.PUBLIC_BASE_URL ?? `http://127.0.0.1:${String(port)}`;
 const mcpSurface = await createMcpDemoSurface(pool, publicBaseUrl);
 const merchantSurface = await createMerchantDemoSurface(pool);
+const ucpShoppingSurface = await createUcpShoppingDemoSurface(pool, publicBaseUrl);
 const merchantSessionCookie = "conduit_merchant_session";
 
 const server = createServer((request, response) => {
@@ -65,7 +67,7 @@ async function handleRequest(
           agent: agentScenarioNames,
           onboarding: onboardingScenarioNames,
           evaluation: evaluationScenarioNames,
-          protocol: [...protocolScenarioNames, "mcp-roundtrip"],
+          protocol: [...protocolScenarioNames, "mcp-roundtrip", "ucp-cart-checkout"],
           journey: journeyScenarioNames,
           merchant: ["catalog-provenance"],
         },
@@ -103,7 +105,7 @@ async function handleRequest(
           {
             phase: 7,
             title: "Product and protocol surface",
-            adds: "Buyer journey, merchant sessions, authenticated MCP",
+            adds: "Buyer journey, merchant sessions, authenticated MCP, UCP cart and checkout handoff",
           },
         ],
       });
@@ -159,6 +161,61 @@ async function handleRequest(
     }
     if (url.pathname === "/mcp") {
       await mcpSurface.handleNode(request, response);
+      return;
+    }
+    if (url.pathname.startsWith("/api/ucp/")) {
+      const body =
+        request.method === "GET" ? undefined : await readJson(request, 64_000);
+      const result = await ucpShoppingSurface.execute(
+        request.method ?? "GET",
+        url.pathname.slice("/api/ucp".length),
+        {
+          authorization: request.headers.authorization,
+          "ucp-agent": headerValue(request.headers["ucp-agent"]),
+          "idempotency-key": headerValue(request.headers["idempotency-key"]),
+        },
+        body,
+      );
+      json(response, result.status, result.body);
+      return;
+    }
+    if (
+      request.method === "POST" &&
+      url.pathname === "/api/protocol/ucp-cart-checkout"
+    ) {
+      json(response, 200, await ucpShoppingSurface.runRoundTrip());
+      return;
+    }
+    const approvalMatch = /^\/api\/checkout\/([0-9a-f-]+)\/approve$/u.exec(
+      url.pathname,
+    );
+    if (request.method === "POST" && approvalMatch?.[1]) {
+      if (!sameOrigin(request)) {
+        json(response, 403, { error: "Cross-origin approval is not allowed" });
+        return;
+      }
+      const body = await readJson(request, 4_096);
+      const token =
+        typeof body === "object" && body !== null && "token" in body
+          ? String(body.token)
+          : "";
+      const result = await ucpShoppingSurface.approve(approvalMatch[1], token);
+      json(response, result.status, result.body);
+      return;
+    }
+    const reviewMatch = /^\/checkout\/([0-9a-f-]+)$/u.exec(url.pathname);
+    if (request.method === "GET" && reviewMatch?.[1]) {
+      const review = await ucpShoppingSurface.review(
+        reviewMatch[1],
+        url.searchParams.get("token") ?? "",
+      );
+      checkoutHtml(
+        response,
+        review.status,
+        reviewMatch[1],
+        url.searchParams.get("token") ?? "",
+        review.body,
+      );
       return;
     }
     if (request.method === "POST" && url.pathname === "/api/protocol/mcp-roundtrip") {
@@ -290,6 +347,32 @@ function json(response: ServerResponse, status: number, value: unknown): void {
   );
 }
 
+function checkoutHtml(
+  response: ServerResponse,
+  status: number,
+  checkoutId: string,
+  token: string,
+  payload: unknown,
+): void {
+  const nonce = crypto.randomUUID().replaceAll("-", "");
+  const state = JSON.stringify({ checkoutId, token, status, payload }).replaceAll(
+    "<",
+    "\\u003c",
+  );
+  response.writeHead(status, {
+    "content-type": "text/html; charset=utf-8",
+    "cache-control": "no-store",
+    "referrer-policy": "no-referrer",
+    "content-security-policy": `default-src 'none'; style-src 'nonce-${nonce}'; script-src 'nonce-${nonce}'; connect-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'`,
+  });
+  response.end(`<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review checkout · CONDUIT</title>
+<style nonce="${nonce}">
+:root{color-scheme:dark;font-family:Inter,ui-sans-serif,system-ui;background:#07110f;color:#eefcf6}*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(circle at 80% 10%,#164b3d 0,transparent 35%),#07110f}main{width:min(760px,calc(100% - 32px));margin:48px auto}.brand{color:#75efbd;letter-spacing:.16em;font-weight:800}.card{margin-top:28px;background:rgba(13,31,27,.94);border:1px solid #285448;border-radius:22px;padding:clamp(22px,5vw,42px);box-shadow:0 24px 80px #0008}.eyebrow{color:#75efbd;font-size:.75rem;letter-spacing:.16em;font-weight:800}h1{font-size:clamp(2rem,7vw,3.6rem);line-height:1;margin:.4em 0}p{color:#b8ccc5;line-height:1.6}.line{display:flex;justify-content:space-between;gap:18px;padding:18px 0;border-top:1px solid #23443b}.line strong{font-size:1.05rem}.line span{color:#9bb5ac}.total{display:flex;justify-content:space-between;align-items:end;border-top:1px solid #3e7565;margin-top:8px;padding-top:24px}.total strong{font-size:2rem}.claims{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0}.chip{border:1px solid #3d6d60;border-radius:999px;padding:7px 10px;font-size:.7rem;letter-spacing:.08em}.real{color:#75efbd}.model{color:#f5cc78}button{width:100%;margin-top:28px;border:0;border-radius:14px;padding:17px;background:#75efbd;color:#062019;font-weight:850;font-size:1rem;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.message{margin-top:18px;padding:14px;border-radius:12px;background:#102a24}.error{color:#ff9d9d}a{color:#75efbd}</style></head>
+<body><main><div class="brand">CONDUIT · TRUSTED CHECKOUT</div><section class="card"><div id="view"></div></section></main>
+<script nonce="${nonce}">const state=${state};const root=document.querySelector('#view');const money=(currency,amount)=>new Intl.NumberFormat('en-IN',{style:'currency',currency}).format(amount/100);const esc=value=>{const node=document.createElement('span');node.textContent=String(value);return node.innerHTML};function render(data){if(!data||data.error){root.innerHTML='<p class="eyebrow error">CHECKOUT UNAVAILABLE</p><h1>We could not open this review.</h1><p>'+esc(data?.error??'Unknown checkout')+'</p><a href="/">Return to the Trust Lab</a>';return}const complete=data.status==='completed';root.innerHTML='<p class="eyebrow">BUYER REVIEW · '+esc(data.status)+'</p><h1>'+(complete?'Order placed safely.':'Review before placing the order.')+'</h1><p>'+(complete?'This checkout is immutable and linked to the order below.':'The agent prepared this basket. You—not the agent—control the final purchase.')+'</p><div class="claims"><span class="chip real">REAL LOCAL TRUST CHECKS</span><span class="chip model">MODELLED PAYMENT · NO REAL MONEY</span></div>'+data.line_items.map(line=>'<div class="line"><div><strong>'+esc(line.item.title)+'</strong><br><span>Quantity '+esc(line.quantity)+' · server-priced</span></div><strong>'+esc(money(data.currency,line.totals.at(-1).amount))+'</strong></div>').join('')+'<div class="total"><span>Final total</span><strong>'+esc(money(data.currency,data.totals.at(-1).amount))+'</strong></div>'+(complete?'<div class="message">Order <strong>'+esc(data.order.id)+'</strong> is complete.</div>':'<button id="approve">Approve and place modelled order</button><div id="message" class="message">This runs live repricing, authorization, stock, ledger, policy, and durable order checks.</div>') ;if(!complete)document.querySelector('#approve').addEventListener('click',approve)}async function approve(){const button=document.querySelector('#approve');const message=document.querySelector('#message');button.disabled=true;message.textContent='Running the trusted commit gates…';try{const response=await fetch('/api/checkout/'+state.checkoutId+'/approve',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({token:state.token})});const data=await response.json();if(!response.ok)throw new Error(data.error??'Approval failed');render(data)}catch(error){button.disabled=false;message.classList.add('error');message.textContent=error.message}}render(state.payload);</script></body></html>`);
+}
+
 function contentType(file: string): string {
   if (file.endsWith(".css")) return "text/css; charset=utf-8";
   if (file.endsWith(".js")) return "text/javascript; charset=utf-8";
@@ -323,6 +406,31 @@ async function readCredentials(
     throw new MerchantAuthenticationError();
   }
   return { email: value.email, password: value.password };
+}
+
+async function readJson(
+  request: IncomingMessage,
+  maximumBytes: number,
+): Promise<unknown> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const buffer of request as AsyncIterable<Buffer>) {
+    size += buffer.length;
+    if (size > maximumBytes) throw new Error("Request body is too large");
+    chunks.push(buffer);
+  }
+  if (size === 0) return {};
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    throw new Error("Request body must be valid JSON");
+  }
+}
+
+function headerValue(
+  value: string | readonly string[] | undefined,
+): string | undefined {
+  return typeof value === "string" ? value : value?.[0];
 }
 
 function readCookie(request: IncomingMessage, name: string): string | undefined {

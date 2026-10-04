@@ -84,6 +84,11 @@ export interface CommerceRepository {
     productId: ProductId,
     quantity: number,
   ): Promise<PricedCart>;
+  replaceCartLines(
+    tenantId: TenantId,
+    cartId: CartId,
+    lines: readonly { readonly productId: ProductId; readonly quantity: number }[],
+  ): Promise<PricedCart>;
   removeCartLine(
     tenantId: TenantId,
     cartId: CartId,

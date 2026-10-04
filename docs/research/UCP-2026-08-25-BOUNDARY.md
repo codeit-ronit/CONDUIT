@@ -4,6 +4,9 @@
 **Evidence type:** primary specification and official repositories  
 **Implementation claim:** partial referenced adapter; conformance not claimed
 
+> Historical slice-1 record. Cart and checkout were added later; see
+> [the cart/checkout research note](UCP-2026-08-25-CART-CHECKOUT.md) for current scope.
+
 ## What changed since the older project knowledge
 
 The latest tagged UCP release is `v2026-08-25`. It adds independent capability
