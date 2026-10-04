@@ -5,8 +5,9 @@ const runButton = document.querySelector("#run-button");
 const empty = document.querySelector("#empty-state");
 const loading = document.querySelector("#loading-state");
 const result = document.querySelector("#result");
-let activeLab = "protocol";
+let activeLab = "journey";
 const selectedByLab = {
+  journey: "buyer-purchase",
   commerce: "authorized",
   boundary: "trusted-read",
   agent: "scripted",
@@ -30,8 +31,10 @@ for (const button of buttons) {
 for (const tab of tabs) {
   tab.addEventListener("click", () => {
     activeLab = tab.dataset.lab;
-    for (const candidate of tabs)
+    for (const candidate of tabs) {
       candidate.classList.toggle("active", candidate === tab);
+      candidate.setAttribute("aria-selected", String(candidate === tab));
+    }
     for (const list of lists)
       list.classList.toggle("hidden", list.dataset.list !== activeLab);
     const activeButton = document.querySelector(
@@ -61,11 +64,15 @@ runButton.addEventListener("click", async () => {
               ? `/api/evaluations/${selected}`
               : activeLab === "protocol"
                 ? `/api/protocol/${selected}`
-                : `/api/scenarios/${selected}`;
+                : activeLab === "journey"
+                  ? `/api/journey/${selected}`
+                  : `/api/scenarios/${selected}`;
     const response = await fetch(endpoint, { method: "POST" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Scenario failed");
-    if (data.phase === 7) renderProtocol(data);
+    if (data.surface === "BUYER_JOURNEY") renderJourney(data);
+    else if (data.surface === "MCP_CATALOG") renderMcp(data);
+    else if (data.phase === 7) renderProtocol(data);
     else if (data.phase === 6) renderEvaluation(data);
     else if (data.phase === 5) renderOnboarding(data);
     else if (data.phase === 4) renderAgent(data);
@@ -79,6 +86,96 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = false;
   }
 });
+
+function renderJourney(data) {
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">BUYER CONSOLE · COMPLETE TRACE</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome allow">PURCHASE COMPLETE</span>
+    </div>
+    <div class="journey-timeline">
+      ${data.stages
+        .map(
+          (stage, index) => `<article class="journey-stage">
+            <div class="journey-rail"><span>${index + 1}</span>${index < data.stages.length - 1 ? "<i></i>" : ""}</div>
+            <div class="journey-body">
+              <div class="journey-title"><div><span class="provenance-label">${escapeHtml(stage.key)}</span><h3>${escapeHtml(stage.title)}</h3></div><span class="claim-token ${claimClass(stage.claim)}">${escapeHtml(stage.claim)}</span></div>
+              <p>${escapeHtml(stage.explanation)}</p>
+              <div class="journey-evidence">${Object.entries(stage.evidence)
+                .map(
+                  ([key, value]) =>
+                    `<div><span>${escapeHtml(humanize(key))}</span><strong>${escapeHtml(displayValue(value))}</strong></div>`,
+                )
+                .join("")}</div>
+            </div>
+          </article>`,
+        )
+        .join("")}
+    </div>
+    <div class="receipt-card">
+      <div><span class="provenance-label">FINAL TOTAL</span><strong>${money({ currency: data.totals.currency, minorUnits: data.totals.chargedMinorUnits })}</strong></div>
+      <div><span class="provenance-label">REAL MONEY MOVED</span><strong>${data.totals.realExternalCharge ? "YES" : "NO — MODELLED PROVIDER"}</strong></div>
+      <span class="receipt-check">✓</span>
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+}
+
+function renderMcp(data) {
+  const products = data.response?.products ?? [];
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">MCP 2026-07-28 · UCP 2026-08-25</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome allow">ROUND TRIP PASSED</span>
+    </div>
+    <div class="claim-strip">
+      <span class="claim-token real">REAL LOCAL</span><span>Official MCP client/server execution + PostgreSQL</span>
+      <span class="claim-token modelled">MODELLED</span><span>Local platform API key</span>
+      <span class="claim-token referenced">REFERENCED</span><span>UCP MCP tool shape</span>
+    </div>
+    <div class="result-grid">
+      <article class="data-card">
+        <h3>1 · TRANSPORT NEGOTIATION</h3>
+        <div class="metric"><span>Protocol</span><strong>${escapeHtml(data.transport.protocol)}</strong></div>
+        <div class="metric"><span>Negotiated era</span><strong>${escapeHtml(data.transport.negotiatedEra)}</strong></div>
+        <div class="metric"><span>SDK</span><strong>${escapeHtml(data.transport.sdk)}</strong></div>
+        <div class="metric"><span>Discovered tools</span><strong>${escapeHtml(data.transport.toolNames.join(", "))}</strong></div>
+      </article>
+      <article class="data-card">
+        <h3>2 · AUTHENTICATED TOOL REQUEST</h3>
+        <div class="metric"><span>Tool</span><strong>${escapeHtml(data.request.tool)}</strong></div>
+        <div class="metric"><span>UCP-Agent</span><strong>${escapeHtml(data.request.meta["ucp-agent"].profile)}</strong></div>
+        <div class="metric"><span>Bearer returned to browser</span><strong>${data.request.bearerSecretReturnedToBrowser ? "YES" : "NO"}</strong></div>
+      </article>
+      <article class="data-card gates">
+        <h3>3 · SCOPED RESULT</h3>
+        <div class="metric"><span>PostgreSQL reads</span><strong>${data.catalogReads}</strong></div>
+        ${products
+          .map(
+            (product) =>
+              `<div class="protocol-product"><div><span class="provenance-label">MCP STRUCTURED CONTENT</span><h4>${escapeHtml(product.title)}</h4><p>${escapeHtml(product.variants[0]?.sku)}</p></div><strong>${money({ currency: product.price_range.min.currency, minorUnits: String(product.price_range.min.amount) })}</strong></div>`,
+          )
+          .join("")}
+      </article>
+      <article class="data-card gates"><h3>CLAIM BOUNDARY</h3><div class="metric"><span>Current state</span><strong>${escapeHtml(data.conformance)}</strong></div><p class="gate-detail">The transport round trip is real and tested. Public HTTPS, OAuth resource metadata, remote profile fetching, and official UCP conformance are still separate gates.</p></article>
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+}
+
+function claimClass(claim) {
+  if (claim === "REAL_LOCAL_DATABASE") return "real";
+  if (claim === "MODELLED") return "modelled";
+  return "referenced";
+}
+
+function displayValue(value) {
+  if (Array.isArray(value)) return value.join(", ");
+  if (typeof value === "boolean") return value ? "YES" : "NO";
+  return value ?? "—";
+}
 
 function renderProtocol(data) {
   const blocked = data.blocked === true;

@@ -335,7 +335,13 @@ function serializeCommit(
     return {
       outcome: "CONFIRMED",
       chargedMinorUnits: commit.operation.total.minorUnits.toString(),
-      evidence: { decision: commit.decision.reason, providerStatus: provider.status },
+      evidence: {
+        decision: commit.decision.reason,
+        providerStatus: provider.status,
+        operationId: stringValue(provider.id, "operationId"),
+        orderId: stringValue(provider.orderId, "orderId"),
+        providerReference: stringValue(provider.providerReference, "providerReference"),
+      },
     };
   }
   if (commit.outcome === "REPLAYED") {

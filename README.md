@@ -27,10 +27,10 @@ architecture.
 
 ## Current status
 
-**Phase 7, slice 1: honest product and protocol surface.** The existing safety evidence
-now sits behind a version-pinned UCP catalog-search boundary with public discovery,
-API-key-to-agent identity binding, exact capability negotiation, credential-scoped real
-PostgreSQL reads, and visible REAL LOCAL / MODELLED / REFERENCED claims. Full UCP
+**Phase 7, slice 2: evidence-led buyer journey and authenticated MCP.** One click now
+explains authorization → selection → trusted commit → modelled payment → durable receipt
+using the existing bounded-agent path. An official modern MCP client also discovers and
+calls a credential-scoped UCP `search_catalog` tool backed by PostgreSQL. Full UCP MCP
 conformance is not claimed. Payment remains explicitly MODELLED; no real money moves.
 
 ## Local setup
@@ -49,10 +49,10 @@ For the visual phase-by-phase demo:
 pnpm demo:web
 ```
 
-Then open <http://127.0.0.1:4310>. Switch among **Purchase safety**, **Tool boundary**,
-**AI buyer**, **Onboarding**, **Evidence**, and **UCP surface**. The newest workspace
-shows successful scoped discovery plus identity/version failures that stop before data
-access.
+Then open <http://127.0.0.1:4310>. Start with **Buyer journey** to see the full purchase
+and its evidence. **UCP + MCP** shows discovery, authenticated MCP catalog access, and
+identity/version failures that stop before data access. The earlier safety, boundary,
+AI, onboarding, and evaluation labs remain available.
 
 For the machine-readable safety gate:
 

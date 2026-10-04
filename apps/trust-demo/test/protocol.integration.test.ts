@@ -2,6 +2,8 @@ import { afterAll, describe, expect, it } from "vitest";
 
 import { createDatabasePool } from "@conduit/infrastructure";
 
+import { runJourneyScenario } from "../src/journey-scenarios.js";
+import { createMcpDemoSurface } from "../src/mcp-demo-surface.js";
 import { runProtocolScenario } from "../src/protocol-scenarios.js";
 
 const pool = createDatabasePool();
@@ -39,6 +41,57 @@ describe("Phase 7 UCP protocol slice", () => {
       blocked: true,
       catalogReads: 0,
       failure: { stage, code },
+    });
+  });
+
+  it("runs an official MCP client through the authenticated catalog handler", async () => {
+    const surface = await createMcpDemoSurface(pool, "http://127.0.0.1:4310");
+    try {
+      expect(await surface.runRoundTrip()).toMatchObject({
+        surface: "MCP_CATALOG",
+        claimLevel: "REAL_LOCAL_DATABASE",
+        transport: {
+          protocol: "MCP",
+          negotiatedEra: "modern",
+          toolNames: ["search_catalog"],
+        },
+        request: { bearerSecretReturnedToBrowser: false },
+        response: {
+          products: [{ title: "MCP Assam Tea" }],
+        },
+        catalogReads: 1,
+        conformance: "PARTIAL_NOT_CLAIMED",
+      });
+    } finally {
+      await surface.close();
+    }
+  });
+
+  it("links the complete buyer journey to durable commit evidence", async () => {
+    expect(await runJourneyScenario(pool, "buyer-purchase")).toMatchObject({
+      surface: "BUYER_JOURNEY",
+      claimLevel: "MIXED_EXPLICIT",
+      stages: [
+        { key: "AUTHORIZATION", claim: "SCRIPTED", status: "COMPLETE" },
+        { key: "SELECTION", claim: "SCRIPTED", status: "COMPLETE" },
+        { key: "COMMIT", claim: "REAL_LOCAL_DATABASE", status: "CONFIRMED" },
+        { key: "PAYMENT", claim: "MODELLED", evidence: { externalMoneyMoved: false } },
+        {
+          key: "RECEIPT",
+          claim: "REAL_LOCAL_DATABASE",
+          evidence: {
+            operationId: expect.any(String),
+            orderId: expect.any(String),
+            providerReference: expect.any(String),
+            auditHead: expect.any(String),
+          },
+        },
+      ],
+      totals: {
+        currency: "INR",
+        chargedMinorUnits: "39800",
+        realExternalCharge: false,
+      },
     });
   });
 });

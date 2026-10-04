@@ -195,4 +195,22 @@ Bearer credential → UCP-Agent identity binding → exact version intersection
 The adapter depends on the domain shape; domain and application code do not depend on
 UCP. The local profile is inspectable at `/.well-known/ucp`, but localhost HTTP and the
 absence of an official schema/conformance run mean conformance is explicitly not
-claimed. Checkout, payment handlers, and MCP are not advertised by this slice.
+claimed. Checkout and payment handlers are not advertised.
+
+### Authenticated MCP catalog transport
+
+The same catalog boundary is now reachable through modern MCP Streamable HTTP. MCP is
+only transport; it cannot choose commerce authority:
+
+```text
+Bearer → credential principal/scope → MCP initialize + tool discovery
+       → search_catalog with UCP-Agent profile → identity/version checks
+       → scoped application catalog read → structured UCP result
+```
+
+The official MCP client and server SDKs execute this path. Invalid bearer credentials
+stop before protocol dispatch, and an agent-profile mismatch stops before PostgreSQL.
+The browser can request a server-side demonstration but never receives the generated
+bearer secret. Local API keys, localhost-only Host/Origin guards, and the SDK's in-band
+tool-error representation mean this is executable partial compatibility—not an official
+UCP MCP conformance claim.

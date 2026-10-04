@@ -20,7 +20,8 @@
     "@conduit/infrastructure": "workspace:*",
     "@conduit/observability": "workspace:*",
     "@conduit/onboarding": "workspace:*",
-    "@conduit/protocol-adapters": "workspace:*"
+    "@conduit/protocol-adapters": "workspace:*",
+    "@modelcontextprotocol/client": "2.3.0"
   },
   "devDependencies": {
     "@types/node": "26.6.4",

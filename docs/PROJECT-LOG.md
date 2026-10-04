@@ -523,3 +523,73 @@ live-provider and live-model validation separate.
 
 Build a buyer journey console on the bounded-agent/trusted-commit flow, then add an
 authenticated MCP catalog binding that reuses this scope and capability boundary.
+
+## 2026-10-04 — Phase 7 slice 2: buyer journey and authenticated MCP
+
+### What we built
+
+- A one-click buyer journey that explains authorization, safe selection, trusted commit,
+  modelled payment, and durable receipt using the existing bounded-agent path.
+- Per-stage SCRIPTED, REAL LOCAL DATABASE, and MODELLED evidence labels, including an
+  explicit `realExternalCharge: false` payment statement.
+- An authenticated `/mcp` Streamable HTTP endpoint built with the official MCP
+  TypeScript SDK and pinned to its modern `2026-07-28` era.
+- One strict `search_catalog` tool carrying the required UCP agent profile, exact UCP
+  capability negotiation, and credential-derived tenant/merchant scope.
+- An official MCP client round trip in both the live lab and PostgreSQL integration
+  suite; the raw bearer never reaches the browser.
+- REST and MCP service advertisements in the local UCP profile without expanding the
+  advertised catalog-only capability.
+
+### Decisions and why
+
+- **Reuse the purchase path.** The journey is a view over tested application behavior,
+  not a second demo-only implementation.
+- **MCP transports; credentials scope.** Tool arguments cannot choose identity or
+  merchant access.
+- **Authenticate before dispatch.** Bad bearers stop at HTTP with zero protocol or data
+  work; UCP agent identity is rechecked before the catalog read.
+- **Use the official SDK.** This tests real MCP initialization, discovery, and tool-call
+  behavior while keeping commerce logic in CONDUIT adapters.
+- **Keep claims granular.** The payment is still modelled and UCP MCP conformance is
+  partial/not claimed.
+
+### Bugs and learning found by evidence
+
+- A new integration expectation guessed ₹498.00, while the authoritative scripted
+  journey selected two ₹199.00 items. The test was corrected to ₹398.00; the server
+  price was not changed to satisfy a presentation assumption.
+- The official high-level MCP server serializes a tool callback `ProtocolError` as an
+  `isError` tool result. Identity mismatch remains fail-closed with zero catalog reads,
+  but exact UCP error-envelope conformance needs separate work.
+
+### Evidence
+
+- `pnpm check` passes formatting, linting, strict type checks, 77 pure tests across 20
+  files, and all package builds.
+- `pnpm db:check` applies migrations idempotently and passes 29 PostgreSQL tests across
+  seven files.
+- `pnpm audit --prod` reports no known vulnerabilities with the pinned MCP packages.
+- Pure MCP tests cover official-client discovery/call, pre-dispatch bearer rejection,
+  and agent-profile impersonation with zero reads.
+- PostgreSQL tests execute the complete MCP round trip and validate durable receipt
+  evidence across the five journey stages.
+- Local live endpoints expose `/api/journey/buyer-purchase`,
+  `/api/protocol/mcp-roundtrip`, `/mcp`, and both transports in `/.well-known/ucp`.
+
+### Honest limits
+
+- MCP uses a process-local API-key credential and localhost HTTP; production should use
+  TLS, durable credential lifecycle and current OAuth resource-server patterns where
+  appropriate.
+- UCP catalog-over-MCP shape is implemented, but official conformance is not claimed.
+- Selection is scripted, payment is modelled, and no Razorpay or bank network is called.
+- UCP checkout, order, payment handlers, remote profile retrieval, and browser session
+  identity remain open.
+
+### Next action
+
+Build the merchant-facing catalog/provenance console and durable browser identity, then
+research and implement the current UCP cart/checkout lifecycle behind executable schema
+and finalization tests. Keep live-model comparison and payment-sandbox validation as
+separate evidence tracks.

@@ -19,8 +19,19 @@ export function authenticateUcpApiKey(
   request: UcpRequestIdentity,
   credentials: readonly UcpApiKeyCredential[],
 ): UcpPrincipal {
-  const secret = bearerSecret(request.authorization);
-  if (!secret || !request.ucpAgent) throw new UcpAuthenticationError();
+  if (!request.ucpAgent) throw new UcpAuthenticationError();
+  return bindUcpAgent(
+    authenticateUcpBearer(request.authorization, credentials),
+    request.ucpAgent,
+  );
+}
+
+export function authenticateUcpBearer(
+  authorization: string | undefined,
+  credentials: readonly UcpApiKeyCredential[],
+): UcpApiKeyCredential {
+  const secret = bearerSecret(authorization);
+  if (!secret) throw new UcpAuthenticationError();
 
   const suppliedDigest = Buffer.from(digestApiKey(secret), "hex");
   const credential = credentials.find((candidate) => {
@@ -32,7 +43,12 @@ export function authenticateUcpApiKey(
     );
   });
 
-  if (credential?.agentProfile !== request.ucpAgent) {
+  if (!credential) throw new UcpAuthenticationError();
+  return credential;
+}
+
+export function bindUcpAgent(credential: UcpPrincipal, ucpAgent: string): UcpPrincipal {
+  if (credential.agentProfile !== ucpAgent) {
     throw new UcpAuthenticationError(
       "Credential and UCP-Agent profile do not identify the same principal",
     );

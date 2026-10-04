@@ -10,7 +10,7 @@ only a live sandbox check is evidence of live behaviour.
 
 | Topic            | Verified finding                                                                                                                                                                           | Design effect                                                                                                                                     | Claim level       |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| MCP              | The 2026-07-28 release changed the core toward stateless requests and formal extensions.                                                                                                   | Pin protocol/SDK versions; put state in explicit domain handles, not transport sessions.                                                          | Referenced        |
+| MCP              | The 2026-07-28 release changed the core toward stateless requests and formal extensions; official TypeScript SDK v2 packages implement the modern era.                                     | Pin protocol/SDK versions; use official Streamable HTTP client/server while identity and state stay in explicit CONDUIT boundaries.               | Real + Referenced |
 | UCP              | Latest tagged release is `v2026-08-25`; profiles use dated protocol/capability versions, `/.well-known/ucp`, exact capability intersection, and identity binding for every auth mechanism. | Pin the adapter to `2026-08-25`, advertise only catalog search, bind API keys to `UCP-Agent`, and withhold conformance until official validation. | Referenced        |
 | ACP              | ACP defines an agentic checkout surface and an MCP binding with five checkout tools; it is maintained by an open project founded by OpenAI and Stripe.                                     | Keep an independent ACP adapter; do not conflate ACP with authorization.                                                                          | Referenced        |
 | AP2              | Current AP2 v0.2 centers signed Checkout and Payment Mandates/Receipts and deterministic verification. This differs from the older intent/cart/payment description in the KT file.         | Borrow authorization-chain ideas now; claim AP2 conformance only after implementing current cryptography and verification tests.                  | Referenced        |
@@ -25,6 +25,9 @@ only a live sandbox check is evidence of live behaviour.
 ## Primary sources
 
 - [MCP 2026-07-28 release](https://blog.modelcontextprotocol.io/posts/2026-07-28/)
+- [Official MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)
+- [UCP catalog MCP binding](https://ucp.dev/2026-08-25/specification/shopping/catalog/mcp/)
+- [Phase 7 MCP implementation note](MCP-2026-07-28-IMPLEMENTATION.md)
 - [Universal Commerce Protocol repository](https://github.com/universal-commerce-protocol/ucp)
 - [UCP v2026-08-25 release](https://github.com/Universal-Commerce-Protocol/ucp/releases/tag/v2026-08-25)
 - [UCP 2026-08-25 overview](https://ucp.dev/2026-08-25/specification/overview/)
@@ -61,7 +64,8 @@ Before a payment provider is selected or called “real,” record:
 
 1. Which payment provider and merchant account will the demo legally and practically
    use?
-2. Should V1 demonstrate UCP REST, UCP-over-MCP, or both?
+2. Which production MCP authorization model and identity provider should replace the
+   local pre-established API key?
 3. Which live model providers are available for broad evaluation, and what data may be
    sent to each?
 4. What buyer/merchant identity provider should production use?

@@ -19,7 +19,7 @@ export interface UcpProfile {
         readonly {
           readonly version: string;
           readonly spec: string;
-          readonly transport: "rest";
+          readonly transport: "rest" | "mcp";
           readonly endpoint: string;
           readonly schema: string;
         }[]

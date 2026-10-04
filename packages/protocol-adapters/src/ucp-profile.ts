@@ -17,6 +17,13 @@ export function createUcpBusinessProfile(baseUrl: string): UcpProfile {
             endpoint: `${origin}/api/ucp`,
             schema: `https://ucp.dev/${UCP_VERSION}/services/shopping/rest.openapi.json`,
           },
+          {
+            version: UCP_VERSION,
+            spec: `https://ucp.dev/${UCP_VERSION}/specification/overview/`,
+            transport: "mcp",
+            endpoint: `${origin}/mcp`,
+            schema: `https://ucp.dev/${UCP_VERSION}/services/shopping/mcp.openrpc.json`,
+          },
         ],
       },
       capabilities: {

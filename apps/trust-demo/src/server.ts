@@ -15,11 +15,14 @@ import {
   runEvaluationScenario,
 } from "./evaluation-scenarios.js";
 import type { EvaluationScenarioName } from "./evaluation-scenarios.js";
+import { journeyScenarioNames, runJourneyScenario } from "./journey-scenarios.js";
+import type { JourneyScenarioName } from "./journey-scenarios.js";
 import {
   onboardingScenarioNames,
   runOnboardingScenario,
 } from "./onboarding-scenarios.js";
 import type { OnboardingScenarioName } from "./onboarding-scenarios.js";
+import { createMcpDemoSurface } from "./mcp-demo-surface.js";
 import { protocolScenarioNames, runProtocolScenario } from "./protocol-scenarios.js";
 import type { ProtocolScenarioName } from "./protocol-scenarios.js";
 import { runScenario, scenarioNames } from "./scenarios.js";
@@ -29,6 +32,7 @@ const pool = createDatabasePool();
 const publicDirectory = fileURLToPath(new URL("../public/", import.meta.url));
 const port = Number(process.env.PORT ?? "4310");
 const publicBaseUrl = process.env.PUBLIC_BASE_URL ?? `http://127.0.0.1:${String(port)}`;
+const mcpSurface = await createMcpDemoSurface(pool, publicBaseUrl);
 
 const server = createServer((request, response) => {
   void handleRequest(request, response);
@@ -53,7 +57,8 @@ async function handleRequest(
           agent: agentScenarioNames,
           onboarding: onboardingScenarioNames,
           evaluation: evaluationScenarioNames,
-          protocol: protocolScenarioNames,
+          protocol: [...protocolScenarioNames, "mcp-roundtrip"],
+          journey: journeyScenarioNames,
         },
         phases: [
           {
@@ -89,7 +94,7 @@ async function handleRequest(
           {
             phase: 7,
             title: "Product and protocol surface",
-            adds: "UCP discovery, authenticated identity binding, scoped catalog",
+            adds: "Buyer journey, authenticated MCP, scoped UCP catalog",
           },
         ],
       });
@@ -98,6 +103,23 @@ async function handleRequest(
     if (request.method === "GET" && url.pathname === "/.well-known/ucp") {
       response.setHeader("cache-control", "public, max-age=60");
       json(response, 200, createUcpBusinessProfile(publicBaseUrl));
+      return;
+    }
+    if (url.pathname === "/mcp") {
+      await mcpSurface.handleNode(request, response);
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/protocol/mcp-roundtrip") {
+      json(response, 200, await mcpSurface.runRoundTrip());
+      return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/journey/")) {
+      const name = url.pathname.slice("/api/journey/".length) as JourneyScenarioName;
+      if (!journeyScenarioNames.includes(name)) {
+        json(response, 404, { error: "Unknown journey scenario" });
+        return;
+      }
+      json(response, 200, await runJourneyScenario(pool, name));
       return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/protocol/")) {
@@ -182,7 +204,13 @@ server.listen(port, "127.0.0.1", () => {
 
 for (const signal of ["SIGINT", "SIGTERM"] as const) {
   process.on(signal, () => {
-    server.close(() => void pool.end().finally(() => process.exit(0)));
+    server.close(
+      () =>
+        void mcpSurface
+          .close()
+          .then(() => pool.end())
+          .finally(() => process.exit(0)),
+    );
   });
 }
 

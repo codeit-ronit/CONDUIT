@@ -222,9 +222,11 @@ zero hard violations, while the controls-off arm demonstrates one L3 and one L4 
 ## Phase 7 — presentable product and interoperability
 
 **Status: in progress from 2026-10-04.** Slice 1 adds a version-pinned UCP `2026-08-25`
-catalog-search boundary, public local discovery, API-key-to-`UCP-Agent` identity
-binding, exact capability negotiation, credential-scoped PostgreSQL reads, honest claim
-labels, tests, and four live demo paths. Full Phase 7 exit criteria remain open.
+catalog boundary. Slice 2 adds a complete evidence-labelled buyer journey plus an
+authenticated MCP `search_catalog` surface using the official SDK, modern `2026-07-28`
+protocol negotiation, agent identity binding, and credential-scoped PostgreSQL reads.
+The buyer-side comprehension exit test is now implemented; merchant UI, production
+identity, checkout interoperability, and dated provider validation remain open.
 
 **Build**
 
@@ -256,8 +258,7 @@ labels, tests, and four live demo paths. Full Phase 7 exit criteria remain open.
 
 ## Immediate next step
 
-Build Phase 7 slice 2: a buyer journey console that explains authorization → selection →
-trusted commit → modelled payment → receipt, followed by authenticated MCP catalog
-transport over the same adapter/application boundary. UCP cart/checkout comes only with
-current schema validation and finalization tests. Live-model comparison and a real
-payment sandbox remain separate, credential-dependent validation tracks.
+Build Phase 7 slice 3: a merchant-facing catalog/provenance console and durable browser
+session identity. Then add UCP cart/checkout only with current schema validation,
+finalization, idempotency, and recovery tests. Live-model comparison and a real payment
+sandbox remain separate, credential-dependent validation tracks.
