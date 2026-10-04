@@ -1,8 +1,26 @@
 # V1 Implementation Plan
 
-**Plan version:** 1.0 **Date:** 2026-10-02 **Planning principle:** complete thin,
+**Plan version:** 1.1 **Date:** 2026-10-05 **Planning principle:** complete thin,
 testable vertical slices. A phase is done only when its exit test passes; a folder or
 class existing is not progress by itself.
+
+## 2026-10-05 reality-validation rebaseline
+
+Phases 0–7 created the correct deterministic foundation, but most evidence is still
+local or modelled. V1 will not add another protocol, console, or large feature area
+until it proves the existing claims against external systems. The detailed execution
+order and evidence gates are in
+[REALITY-VALIDATION-ROADMAP.md](REALITY-VALIDATION-ROADMAP.md).
+
+The rebaseline makes four distinctions explicit:
+
+- ordinary payment correctness is necessary infrastructure, not the novel claim;
+- the AI-specific work is delegated authorization, tool/effect enforcement, and
+  adversarial evaluation;
+- human-present approval and autonomous delegated spending are separate supported modes,
+  not one confused flow;
+- scripted agents and modelled payments remain regression fixtures, but cannot satisfy
+  an external-evidence exit gate.
 
 ## Proposed technical foundation
 
@@ -227,6 +245,8 @@ authenticated MCP catalog. Slice 3 adds a merchant catalog/provenance console wi
 durable, revocable, session-derived merchant scope. Slice 4 adds UCP cart and checkout,
 payload-bound idempotency, and trusted buyer handoff over the canonical trust kernel.
 Production identity, official conformance, and dated provider validation remain open.
+Further breadth is paused. Phase 7 closes only after the durable order/receipt read
+model exists and every surface labels external evidence honestly.
 
 **Build**
 
@@ -245,6 +265,95 @@ Production identity, official conformance, and dated provider validation remain 
 - The demo clearly identifies which external calls are real.
 - Protocol/provider claims link to a dated conformance or manifest report.
 
+## Phase 8 — live-model evidence
+
+**Status: planned.** Run the same prewritten adversarial suite against at least two
+model families from two providers. Preserve raw, redacted traces and report repeated
+guardrails-on/off results, cost, latency, malformed output, selection steering, and hard
+authorization violations separately.
+
+**Exit test**
+
+- The report contains repeated runs, model/version/date, scenario digest, and raw
+  evidence rather than one successful screenshot.
+- At least one attack changes model behaviour with a control disabled, while enabled
+  controls produce zero unauthorized external effects.
+- The report says plainly that constrained-choice manipulation and dishonest structured
+  merchant data are not solved by the payment kernel.
+
+## Phase 9 — Razorpay Test Mode payment evidence
+
+**Status: planned.** Replace the one-call modelled provider assumption with an
+asynchronous payment-session contract. Integrate Razorpay Test Mode order creation,
+buyer Checkout, mandatory callback/webhook signature verification, idempotent webhook
+processing, status lookup, ambiguous-result reconciliation, and refunds. Inject a lost
+response after a real sandbox effect to exercise `PAYMENT_UNKNOWN` without a blind
+retry.
+
+**Exit test**
+
+- A user completes a Razorpay Test Mode success and failure flow in the demo.
+- Signed callbacks/webhooks update the canonical order; forged and replayed events do
+  not.
+- A deliberately discarded provider response is recovered through lookup without a
+  duplicate provider effect.
+- A test refund is linked to the original payment and visible in the receipt timeline.
+
+## Phase 10 — verifiable delegated authorization
+
+**Status: planned.** Add a signed, versioned authorization credential inspired by the
+current AP2 mandate model. Keep PostgreSQL as the local revocation/drawdown authority,
+but let a merchant verifier validate issuer, audience, expiry, checkout binding,
+constraints, agent key confirmation, and replay status without trusting caller-supplied
+database identifiers.
+
+Two modes remain visible:
+
+- **human present:** the buyer signs a closed checkout authorization on a trusted
+  surface;
+- **human not present:** the buyer signs a narrow open authorization and the bound agent
+  may close it only within its constraints.
+
+AP2 conformance is not claimed until the current schemas, signature formats,
+disclosures, receipts, and an official or independently reviewable conformance suite all
+pass.
+
+**Exit test**
+
+- Altered checkout, amount, merchant, audience, expiry, agent key, or signature fails
+  deterministically.
+- Concurrent reuse cannot authorize two conflicting checkouts.
+- A merchant-side verifier accepts valid evidence using published verification keys and
+  does not need access to CONDUIT's internal tables.
+
+## Phase 11 — public interoperability proof
+
+**Status: planned.** Deploy the narrow reference merchant over HTTPS, publish its UCP
+profile and verification keys, then make an independently implemented agent discover,
+shop, and complete both the human-present flow and the constrained autonomous flow.
+
+**Exit test**
+
+- The external agent is not implemented with CONDUIT's internal application classes.
+- The run begins from public discovery and ends with a Razorpay test receipt plus a
+  downloadable evidence bundle.
+- Deployment, protocol, model, and provider versions are recorded with the run.
+
+## Phase 12 — external proof and product decision
+
+**Status: planned.** Publish the benchmark, architecture explanation, two-minute demo,
+and reproducible commands. Seek one small merchant pilot only after the test-mode flow
+is stable. Use those conversations to choose one commercial direction; do not build the
+merchant-readiness and business-spend products simultaneously.
+
+**Exit test**
+
+- At least one person outside the project completes the flow and provides recorded
+  feedback.
+- The project reports measured runs and failures, not only feature counts.
+- A merchant pilot has an explicit success metric, or the repository stays honestly
+  positioned as an open reference/conformance project.
+
 ## Definition of done for every slice
 
 - Behaviour and threat addressed are documented.
@@ -258,7 +367,7 @@ Production identity, official conformance, and dated provider validation remain 
 
 ## Immediate next step
 
-Build the durable order read model, then validate a chosen payment provider in its live
-sandbox with webhook, timeout, reconciliation, and refund evidence. Keep official UCP
-conformance, production identity, and live-model comparison as separate validation
-tracks.
+Close Phase 7 with the durable order/receipt read model and no new breadth. Then execute
+Phase 8 live-model evaluation before Phase 9 Razorpay Test Mode integration. Sentinel is
+deferred; selected ideas may later harden the provider-tool boundary, but it is not on
+the critical path to proving CONDUIT.

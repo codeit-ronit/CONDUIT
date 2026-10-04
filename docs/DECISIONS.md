@@ -20,6 +20,7 @@ changes, add a new ADR that supersedes the old one.
 | [ADR-0012](decisions/ADR-0012-authenticated-mcp-and-evidence-led-journey.md)  | Authenticate MCP; present one evidence-led journey | Accepted | Transport cannot choose authority, and the demo reuses tested product paths  |
 | [ADR-0013](decisions/ADR-0013-session-derived-merchant-scope.md)              | Derive merchant scope from durable sessions        | Accepted | Browser input cannot select another tenant or merchant                       |
 | [ADR-0014](decisions/ADR-0014-ucp-checkout-requires-trusted-buyer-handoff.md) | Require trusted buyer handoff for UCP checkout     | Accepted | Agents can prepare checkout without gaining final purchase authority         |
+| [ADR-0015](decisions/ADR-0015-evidence-before-breadth.md)                     | Require external evidence before product breadth   | Accepted | Converts local engineering claims into model, provider, and client evidence  |
 
 ## Short-form product decisions
 

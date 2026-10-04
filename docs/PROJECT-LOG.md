@@ -698,3 +698,47 @@ schema, finalization, idempotency, failure, and recovery tests pass.
 Build the durable order read model. Then validate a chosen provider's real sandbox,
 webhook/reconciliation, timeout, decline, and refund behavior as a separate evidence
 track.
+
+## 2026-10-05 — Reality-validation roadmap
+
+### What changed
+
+- Rebaselined the remaining V1 work around external evidence rather than additional
+  product breadth.
+- Added explicit phases for repeated live-model evaluation, Razorpay Test Mode,
+  cryptographically verifiable delegation, public independent-agent interoperability,
+  and external use.
+- Split authorization into two honest modes: human-present trusted review and future
+  human-not-present execution under a signed, constrained credential.
+- Narrowed the immediate project position to an evidence-grade reference merchant and
+  safety testbed. Long-tail merchant enablement remains a hypothesis to validate, not a
+  proven business.
+
+### Why
+
+The existing deterministic kernel proves important local invariants, but scripted
+models, modelled payments, same-repository clients, and localhost demos cannot establish
+real-world interoperability or provider behaviour. Another protocol or console would not
+close those evidence gaps.
+
+The revised story also separates ordinary payments engineering from the AI-specific
+contribution. Server pricing, ledgers, idempotency, outboxes, and reconciliation are
+necessary infrastructure. Delegated authorization, model effect boundaries, signed agent
+constraints, and adversarial live-model measurement are the differentiating work.
+
+### Decisions and limits
+
+- Prompt-injection handling is described as effect containment, not a complete solution
+  to steering or dishonest merchant data.
+- Scripted agents and the modelled provider remain useful regression fixtures but cannot
+  complete an external-evidence gate.
+- ACP, x402, new large UI areas, generalized merchant features, live money, and SENTINEL
+  runtime integration are paused.
+- AP2 will be used as the current design reference for signed mandates, but conformance
+  is not claimed before exact verification and conformance evidence exists.
+
+### Next action
+
+Close Phase 7 with the durable order/receipt read model. Then run the prewritten safety
+suite repeatedly against at least two live model providers before beginning Razorpay
+Test Mode integration.

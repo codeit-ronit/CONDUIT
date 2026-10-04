@@ -1,6 +1,6 @@
 # CONDUIT Project Guide
 
-**Status:** living document **Last updated:** 2026-10-02 **Source material:**
+**Status:** living document **Last updated:** 2026-10-05 **Source material:**
 `CONDUIT-KT.md`, independently checked research, and new design decisions recorded in
 this repository.
 
@@ -20,19 +20,23 @@ The agent can shop freely inside that envelope. It cannot turn its own words int
 charge. Code outside the model checks the merchant, expiry, currency, items, live price,
 stock, cumulative spend, and operation identity before an external action occurs.
 
-## 2. Who is the product for?
+## 2. Who is the project for now?
 
-The initial customer is a small or medium merchant that already has a website or
-spreadsheet but no agent-commerce engineering team. The product has two sides:
+The immediate V1 is for engineers, interviewers, protocol implementers, and merchant
+platform teams who need reproducible evidence about agentic checkout. It provides:
 
-- **Merchant side:** import a catalog, expose safe machine-readable commerce, receive
-  orders, and see why an action was allowed or refused.
-- **Buyer side:** delegate a constrained purchase to an agent and receive a receipt that
-  links intent, checkout, authorization, policy, and payment.
+- a reference merchant that an independent agent can discover and buy from;
+- a conformance/red-team harness that measures model and checkout failures;
+- a complete evidence chain from delegated intent to test payment and receipt.
 
-The product is not “an AI shopping chatbot.” The sellable part is the trust and
-interoperability layer that makes many shopping agents safe enough to transact with many
-merchants.
+The leading commercial hypothesis remains helping small or custom-stack merchants turn a
+spreadsheet/storefront into an agent-ready catalog and checkout. That hypothesis is not
+called a sellable product until a deployed flow and merchant conversation validate it.
+CONDUIT will not claim to be a universal intermediary that payment rails and major agent
+platforms must trust.
+
+The product is not “an AI shopping chatbot.” For V1, the valuable output is a narrow,
+public, measurable implementation—not the number of protocols or dashboards it contains.
 
 ## 3. Core thesis
 
