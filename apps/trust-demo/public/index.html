@@ -23,21 +23,21 @@
     <main>
       <section class="hero">
         <div>
-          <p class="eyebrow">PHASE 06 · INTERACTIVE BUILD</p>
-          <h1>Don't trust a safety claim.<br />Measure it.</h1>
+          <p class="eyebrow">PHASE 07 · PRODUCT + PROTOCOL</p>
+          <h1>Make trust usable.<br />Make claims visible.</h1>
           <p class="hero-copy">
-            Run fixed expectations against real database workflows. Hard safety metrics
-            must stay exactly zero, and paired attacks show which control actually made
-            the difference.
+            See how a buyer agent discovers one honest capability, proves its identity,
+            and reads only its merchant-scoped catalog. Every surface says what is real,
+            modelled, or externally referenced.
           </p>
         </div>
         <div class="hero-orbit" aria-hidden="true">
           <div class="orbit-ring ring-one"></div>
           <div class="orbit-ring ring-two"></div>
-          <div class="core">EVIDENCE<br />GATE</div>
-          <span class="node n1">EXPECTED</span>
-          <span class="node n2">HARD ZERO</span>
-          <span class="node n3">ABLATE</span>
+          <div class="core">TRUSTED<br />SURFACE</div>
+          <span class="node n1">DISCOVER</span>
+          <span class="node n2">AUTHENTICATE</span>
+          <span class="node n3">SCOPE</span>
         </div>
       </section>
 
@@ -92,11 +92,20 @@
             <span class="phase-state">BUILT</span>
           </article>
           <div class="phase-arrow">→</div>
-          <article class="phase-card active newest">
+          <article class="phase-card done">
             <span class="phase-number">06</span>
             <div>
               <h3>Evidence and red team</h3>
               <p>Expected outcomes · hard-zero gates · A/B ablations</p>
+            </div>
+            <span class="phase-state">BUILT</span>
+          </article>
+          <div class="phase-arrow">→</div>
+          <article class="phase-card active newest">
+            <span class="phase-number">07</span>
+            <div>
+              <h3>Product + protocol</h3>
+              <p>Discovery · identity binding · scoped catalog · honest claims</p>
             </div>
             <span class="phase-state">NOW</span>
           </article>
@@ -121,8 +130,9 @@
             </button>
             <button class="lab-tab" data-lab="agent" role="tab">AI buyer</button>
             <button class="lab-tab" data-lab="onboarding" role="tab">Onboarding</button>
-            <button class="lab-tab active" data-lab="evaluation" role="tab">
-              Evidence
+            <button class="lab-tab" data-lab="evaluation" role="tab">Evidence</button>
+            <button class="lab-tab active" data-lab="protocol" role="tab">
+              UCP surface
             </button>
           </div>
           <div class="scenario-list hidden" data-list="commerce" role="list">
@@ -274,7 +284,7 @@
               >
             </button>
           </div>
-          <div class="scenario-list" data-list="evaluation" role="list">
+          <div class="scenario-list hidden" data-list="evaluation" role="list">
             <button class="scenario active" data-scenario="safety-regression">
               <span class="scenario-icon">0</span>
               <span
@@ -290,8 +300,38 @@
               >
             </button>
           </div>
+          <div class="scenario-list" data-list="protocol" role="list">
+            <button class="scenario active" data-scenario="profile-discovery">
+              <span class="scenario-icon">UCP</span>
+              <span
+                ><strong>Profile discovery</strong
+                ><small>Advertise only what exists</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="authenticated-catalog">
+              <span class="scenario-icon">✓</span>
+              <span
+                ><strong>Authenticated catalog</strong
+                ><small>Real scoped PostgreSQL data</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="identity-mismatch">
+              <span class="scenario-icon">ID</span>
+              <span
+                ><strong>Identity mismatch</strong
+                ><small>Valid key, wrong agent</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="capability-mismatch">
+              <span class="scenario-icon">≠</span>
+              <span
+                ><strong>Version mismatch</strong
+                ><small>Exact negotiation fails closed</small></span
+              >
+            </button>
+          </div>
           <button id="run-button" class="run-button">
-            Run safety regression <span>→</span>
+            Run profile discovery <span>→</span>
           </button>
         </aside>
 
@@ -307,7 +347,7 @@
           </div>
           <div id="loading-state" class="loading-state hidden">
             <div class="scanner"></div>
-            <p>Running the evidence suite…</p>
+            <p>Running the selected system path…</p>
           </div>
           <div id="result" class="hidden"></div>
         </section>
@@ -316,7 +356,7 @@
 
     <footer>
       <span>CONDUIT V1 · LOCAL DEVELOPMENT</span>
-      <span>Every external effect in this demo is explicitly MODELLED.</span>
+      <span>Claims are explicit: REAL LOCAL · MODELLED · REFERENCED.</span>
     </footer>
     <script type="module" src="/app.js"></script>
   </body>

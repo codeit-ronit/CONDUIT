@@ -27,11 +27,11 @@ architecture.
 
 ## Current status
 
-**Phase 6: measurable safety evidence.** A versioned nine-scenario manifest, hard-zero
-regression gates, generated invariants, paired red-team attacks, and one-control
-ablations are operational. The controls-on arm keeps L3/L4 at zero; the controls-off arm
-proves the scripted attacks can land. Payment remains explicitly MODELLED; no real money
-moves.
+**Phase 7, slice 1: honest product and protocol surface.** The existing safety evidence
+now sits behind a version-pinned UCP catalog-search boundary with public discovery,
+API-key-to-agent identity binding, exact capability negotiation, credential-scoped real
+PostgreSQL reads, and visible REAL LOCAL / MODELLED / REFERENCED claims. Full UCP
+conformance is not claimed. Payment remains explicitly MODELLED; no real money moves.
 
 ## Local setup
 
@@ -50,8 +50,9 @@ pnpm demo:web
 ```
 
 Then open <http://127.0.0.1:4310>. Switch among **Purchase safety**, **Tool boundary**,
-**AI buyer**, **Onboarding**, and **Evidence**. The Evidence workspace runs prewritten
-PostgreSQL-backed regressions and compares attacks with controls on, off, and ablated.
+**AI buyer**, **Onboarding**, **Evidence**, and **UCP surface**. The newest workspace
+shows successful scoped discovery plus identity/version failures that stop before data
+access.
 
 For the machine-readable safety gate:
 

@@ -19,7 +19,8 @@
     "@conduit/evals": "workspace:*",
     "@conduit/infrastructure": "workspace:*",
     "@conduit/observability": "workspace:*",
-    "@conduit/onboarding": "workspace:*"
+    "@conduit/onboarding": "workspace:*",
+    "@conduit/protocol-adapters": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "26.6.4",

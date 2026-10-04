@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "@conduit/infrastructure";
+import { createUcpBusinessProfile } from "@conduit/protocol-adapters";
 
 import { agentScenarioNames, runAgentScenario } from "./agent-scenarios.js";
 import type { AgentScenarioName } from "./agent-scenarios.js";
@@ -19,12 +20,15 @@ import {
   runOnboardingScenario,
 } from "./onboarding-scenarios.js";
 import type { OnboardingScenarioName } from "./onboarding-scenarios.js";
+import { protocolScenarioNames, runProtocolScenario } from "./protocol-scenarios.js";
+import type { ProtocolScenarioName } from "./protocol-scenarios.js";
 import { runScenario, scenarioNames } from "./scenarios.js";
 import type { ScenarioName } from "./scenarios.js";
 
 const pool = createDatabasePool();
 const publicDirectory = fileURLToPath(new URL("../public/", import.meta.url));
 const port = Number(process.env.PORT ?? "4310");
+const publicBaseUrl = process.env.PUBLIC_BASE_URL ?? `http://127.0.0.1:${String(port)}`;
 
 const server = createServer((request, response) => {
   void handleRequest(request, response);
@@ -42,13 +46,14 @@ async function handleRequest(
     if (request.method === "GET" && url.pathname === "/api/overview") {
       json(response, 200, {
         claimLevel: "MODELLED",
-        phase: 6,
+        phase: 7,
         scenarios: {
           commerce: scenarioNames,
           boundary: boundaryScenarioNames,
           agent: agentScenarioNames,
           onboarding: onboardingScenarioNames,
           evaluation: evaluationScenarioNames,
+          protocol: protocolScenarioNames,
         },
         phases: [
           {
@@ -81,8 +86,27 @@ async function handleRequest(
             title: "Evidence and red team",
             adds: "Versioned expectations, hard-zero gates, A/B control ablations",
           },
+          {
+            phase: 7,
+            title: "Product and protocol surface",
+            adds: "UCP discovery, authenticated identity binding, scoped catalog",
+          },
         ],
       });
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/.well-known/ucp") {
+      response.setHeader("cache-control", "public, max-age=60");
+      json(response, 200, createUcpBusinessProfile(publicBaseUrl));
+      return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/protocol/")) {
+      const name = url.pathname.slice("/api/protocol/".length) as ProtocolScenarioName;
+      if (!protocolScenarioNames.includes(name)) {
+        json(response, 404, { error: "Unknown protocol scenario" });
+        return;
+      }
+      json(response, 200, await runProtocolScenario(pool, name));
       return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/evaluations/")) {

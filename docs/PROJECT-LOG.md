@@ -477,3 +477,49 @@ that keeps scripted, modelled, referenced, and real evidence separate.
 Build Phase 7's buyer/merchant product surfaces and authenticated protocol adapter,
 carrying evidence tiers into every claim. Start with UCP compatibility research; keep
 live-provider and live-model validation separate.
+
+## 2026-10-04 — Phase 7 slice 1: honest UCP product boundary
+
+### What we built
+
+- A new `@conduit/protocol-adapters` package for UCP discovery, authentication,
+  negotiation, and catalog projection.
+- A profile pinned to the current tagged UCP `2026-08-25` release that advertises only
+  `dev.ucp.shopping.catalog.search`.
+- Constant-time API-key digest verification plus mandatory binding between the
+  credential principal and the `UCP-Agent` profile.
+- Exact protocol/capability version intersection and fail-closed mismatch errors.
+- Credential-derived tenant/merchant scope and a UCP-shaped catalog response sourced
+  from real PostgreSQL product and price data.
+- A public local `/.well-known/ucp` route and four visual UCP scenarios: discovery,
+  authenticated catalog, impostor identity, and incompatible version.
+- Visible REAL LOCAL / MODELLED / REFERENCED labels and an explicit `NOT_CLAIMED`
+  conformance state.
+
+### Decisions and why
+
+- **Catalog before checkout.** It proves the protocol seam without advertising payment
+  or finalization work that is not built.
+- **Advertise narrowly.** Discovery is a contract, so absent implementation means absent
+  capability.
+- **Identity before data.** A valid secret with a different profile is still an
+  impersonation attempt; failures cause zero catalog reads.
+- **Scope from credentials.** Caller input cannot choose another tenant or merchant.
+- **Exact versions only.** UCP explicitly does not infer capability compatibility from
+  date ordering.
+- **No conformance shortcut.** A local shape and unit tests are not an official schema
+  or conformance-suite result.
+
+### Honest limits
+
+- The local server uses HTTP and therefore is not a conformant public UCP deployment.
+- API keys are a supported pre-established mechanism, but this demo lacks durable key
+  lifecycle, a secret manager, rate limiting, and remote profile discovery.
+- The official schema validator/conformance suite has not run yet.
+- Pagination, filters, lookup, cart, checkout, order, payment handlers, AP2, and MCP
+  transport are not implemented or advertised in this slice.
+
+### Next action
+
+Build a buyer journey console on the bounded-agent/trusted-commit flow, then add an
+authenticated MCP catalog binding that reuses this scope and capability boundary.

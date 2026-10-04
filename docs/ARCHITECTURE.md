@@ -180,3 +180,19 @@ CONDUIT has a canonical internal model. External standards translate at the edge
 
 We do not force these different protocols into one abstraction. Each solves a different
 problem, changes independently, and must carry its own version and conformance evidence.
+
+### First UCP vertical slice
+
+`@conduit/protocol-adapters` now owns a UCP `2026-08-25` catalog-search projection. The
+discovery profile advertises only that capability. Protected work follows this order:
+
+```text
+Bearer credential → UCP-Agent identity binding → exact version intersection
+                  → credential tenant/merchant scope → application catalog read
+                  → UCP catalog response
+```
+
+The adapter depends on the domain shape; domain and application code do not depend on
+UCP. The local profile is inspectable at `/.well-known/ucp`, but localhost HTTP and the
+absence of an official schema/conformance run mean conformance is explicitly not
+claimed. Checkout, payment handlers, and MCP are not advertised by this slice.

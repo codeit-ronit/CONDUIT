@@ -5,13 +5,14 @@ const runButton = document.querySelector("#run-button");
 const empty = document.querySelector("#empty-state");
 const loading = document.querySelector("#loading-state");
 const result = document.querySelector("#result");
-let activeLab = "evaluation";
+let activeLab = "protocol";
 const selectedByLab = {
   commerce: "authorized",
   boundary: "trusted-read",
   agent: "scripted",
   onboarding: "spreadsheet-preview",
   evaluation: "safety-regression",
+  protocol: "profile-discovery",
 };
 
 for (const button of buttons) {
@@ -58,11 +59,14 @@ runButton.addEventListener("click", async () => {
             ? `/api/onboarding/${selected}`
             : activeLab === "evaluation"
               ? `/api/evaluations/${selected}`
-              : `/api/scenarios/${selected}`;
+              : activeLab === "protocol"
+                ? `/api/protocol/${selected}`
+                : `/api/scenarios/${selected}`;
     const response = await fetch(endpoint, { method: "POST" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Scenario failed");
-    if (data.phase === 6) renderEvaluation(data);
+    if (data.phase === 7) renderProtocol(data);
+    else if (data.phase === 6) renderEvaluation(data);
     else if (data.phase === 5) renderOnboarding(data);
     else if (data.phase === 4) renderAgent(data);
     else if (data.phase === 3) renderBoundary(data);
@@ -75,6 +79,68 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = false;
   }
 });
+
+function renderProtocol(data) {
+  const blocked = data.blocked === true;
+  const outcome = blocked
+    ? { label: "BLOCKED SAFELY", className: "deny" }
+    : data.catalog
+      ? { label: "AUTHENTICATED", className: "allow" }
+      : { label: "DISCOVERABLE", className: "warn" };
+  const capability = "dev.ucp.shopping.catalog.search";
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">UCP 2026-08-25 · VERTICAL SLICE</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome ${outcome.className}">${outcome.label}</span>
+    </div>
+    <div class="claim-strip">
+      <span class="claim-token real">REAL LOCAL</span><span>PostgreSQL catalog and tenant scope</span>
+      <span class="claim-token modelled">MODELLED</span><span>Local buyer-agent credentials</span>
+      <span class="claim-token referenced">REFERENCED</span><span>UCP contract version</span>
+    </div>
+    <div class="result-grid">
+      <article class="data-card">
+        <h3>1 · DISCOVERY PROFILE</h3>
+        <div class="metric"><span>Protocol release</span><strong>${escapeHtml(data.implementation?.pinnedRelease)}</strong></div>
+        <div class="metric"><span>Advertised capability</span><strong>${escapeHtml(capability)}</strong></div>
+        <div class="metric"><span>Conformance</span><strong>${escapeHtml(data.implementation?.conformance)}</strong></div>
+        <p class="gate-detail">Checkout and payments are deliberately absent because this protocol slice does not implement them yet.</p>
+      </article>
+      <article class="data-card">
+        <h3>2 · IDENTITY + NEGOTIATION</h3>
+        ${
+          blocked
+            ? `<div class="metric"><span>Stopped at</span><strong>${escapeHtml(data.failure.stage)}</strong></div><div class="metric"><span>Reason</span><strong>${escapeHtml(data.failure.code)}</strong></div><p class="unknown-note">${escapeHtml(data.failure.message)}</p>`
+            : data.authentication
+              ? `<div class="metric"><span>Mechanism</span><strong>${escapeHtml(data.authentication.mechanism)}</strong></div><div class="metric"><span>Identity binding</span><strong>${escapeHtml(data.authentication.identityBinding)}</strong></div><div class="metric"><span>Secret in browser</span><strong>${data.authentication.secretReturnedToBrowser ? "YES" : "NO"}</strong></div>`
+              : `<p class="gate-detail">Discovery is public. Protected operations authenticate separately.</p>`
+        }
+      </article>
+      <article class="data-card gates">
+        <h3>3 · DATA EFFECT</h3>
+        <div class="metric"><span>Catalog reads</span><strong>${data.catalogReads ?? 0}</strong></div>
+        ${
+          data.catalog
+            ? data.catalog.products
+                .map(
+                  (product) =>
+                    `<div class="protocol-product"><div><span class="provenance-label">REAL LOCAL DATABASE</span><h4>${escapeHtml(product.title)}</h4><p>${escapeHtml(product.variants[0]?.sku)} · ${escapeHtml(product.categories?.[0]?.value)}</p></div><strong>${money({ currency: product.price_range.min.currency, minorUnits: String(product.price_range.min.amount) })}</strong></div>`,
+                )
+                .join("")
+            : `<p class="gate-detail">${blocked ? "Zero merchant reads: authentication and negotiation happen first." : "Run authenticated catalog to see the real scoped product projection."}</p>`
+        }
+      </article>
+      <article class="data-card gates">
+        <h3>WHAT THIS PROVES — AND DOES NOT</h3>
+        <div class="metric"><span>Proves</span><strong>Discovery · exact negotiation · identity binding · scope</strong></div>
+        <div class="metric"><span>Does not prove</span><strong>Full UCP conformance or production deployment</strong></div>
+        <p class="gate-detail">The official schemas and conformance suite remain an explicit later gate. Local HTTP also cannot satisfy public HTTPS hosting rules.</p>
+      </article>
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+}
 
 function renderEvaluation(data) {
   const report = data.report;
