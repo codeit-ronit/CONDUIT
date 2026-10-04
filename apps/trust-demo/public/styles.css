@@ -218,7 +218,7 @@ h1 {
 }
 .phase-track {
   display: grid;
-  grid-template-columns: 1fr 28px 1fr 28px 1fr 28px 1fr;
+  grid-template-columns: 1fr 22px 1fr 22px 1fr 22px 1fr 22px 1fr;
   align-items: center;
   margin-top: 26px;
 }
@@ -294,7 +294,7 @@ h1 {
 }
 .lab-tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   margin-top: 24px;
   padding: 4px;
@@ -799,6 +799,31 @@ h1 {
 .agent-event small {
   display: block;
 }
+.catalog-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.catalog-split > div {
+  min-width: 0;
+  padding: 11px;
+  border: 1px solid rgba(120, 220, 232, 0.25);
+  background: rgba(120, 220, 232, 0.04);
+}
+.catalog-split > .untrusted {
+  border-color: rgba(255, 204, 102, 0.3);
+  background: rgba(255, 204, 102, 0.04);
+}
+.catalog-split pre {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: #bac5bc;
+  font:
+    10px/1.5 ui-monospace,
+    monospace;
+}
 .agent-event strong {
   color: #d8e2da;
   font:
@@ -900,6 +925,9 @@ footer {
   }
   .audit-entry {
     grid-template-columns: 30px 66px 1fr;
+  }
+  .catalog-split {
+    grid-template-columns: 1fr;
   }
   .audit-hash {
     display: none;

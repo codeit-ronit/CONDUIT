@@ -1,6 +1,6 @@
 # Research and Validation Register
 
-**Checked:** 2026-10-02
+**Checked:** 2026-10-04
 
 The rule for this file: record what a primary source or live system actually says, the
 date checked, and the design effect. Documentation is evidence of a published contract;
@@ -18,6 +18,8 @@ only a live sandbox check is evidence of live behaviour.
 | Prompt injection | OWASP states prompt injection remains a core LLM-application risk; RAG/fine-tuning do not fully remove it.                                                                            | Treat text isolation as mitigation and enforce permissions/effects outside the model.                                            | Referenced        |
 | PostgreSQL       | PostgreSQL 18.6 is the current stable release; PostgreSQL 19 is beta. The official image publishes an `18.6-trixie` tag.                                                              | Pin 18.6 for reproducible development/CI and exclude beta database versions from the trust path.                                 | Real + Referenced |
 | OpenAI output    | The Responses API supports strict Structured Outputs through `text.format`; every object needs `additionalProperties: false`, and applications must handle refusal/incomplete output. | Use strict JSON Schema in the live adapter, then validate locally; treat refusal or incomplete output as a stopped run.          | Referenced        |
+| Storefront data  | A live Allbirds page exposed a schema.org `ProductGroup` with SKU, Offer price/currency, brand, description, availability, and linked variants.                                       | Support standards-based Product and ProductGroup extraction; never add retailer-specific prose guessing.                         | Real + Referenced |
+| XLSX parser      | ExcelJS 4.4.0 is the current published release and supports loading workbook data from a buffer.                                                                                      | Pin 4.4.0 and keep file-size/row/column limits around the parser.                                                                | Referenced        |
 
 ## Primary sources
 
@@ -32,6 +34,9 @@ only a live sandbox check is evidence of live behaviour.
 - [PostgreSQL 18.6 release notes](https://www.postgresql.org/docs/release/18.6/)
 - [PostgreSQL Docker Official Image](https://hub.docker.com/_/postgres)
 - [OpenAI Structured Outputs guide](https://developers.openai.com/api/docs/guides/structured-outputs)
+- [Schema.org ProductGroup](https://schema.org/ProductGroup)
+- [ExcelJS releases](https://github.com/exceljs/exceljs/releases)
+- [Phase 5 public storefront validation](PHASE-5-PUBLIC-STOREFRONT-VALIDATION.md)
 
 ## Facts still requiring live validation
 

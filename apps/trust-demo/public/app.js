@@ -10,6 +10,7 @@ const selectedByLab = {
   commerce: "authorized",
   boundary: "trusted-read",
   agent: "scripted",
+  onboarding: "spreadsheet-preview",
 };
 
 for (const button of buttons) {
@@ -52,11 +53,14 @@ runButton.addEventListener("click", async () => {
         ? `/api/boundary/${selected}`
         : activeLab === "agent"
           ? `/api/agent/${selected}`
-          : `/api/scenarios/${selected}`;
+          : activeLab === "onboarding"
+            ? `/api/onboarding/${selected}`
+            : `/api/scenarios/${selected}`;
     const response = await fetch(endpoint, { method: "POST" });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error ?? "Scenario failed");
-    if (data.phase === 4) renderAgent(data);
+    if (data.phase === 5) renderOnboarding(data);
+    else if (data.phase === 4) renderAgent(data);
     else if (data.phase === 3) renderBoundary(data);
     else renderCommerce(data);
   } catch (error) {
@@ -67,6 +71,102 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = false;
   }
 });
+
+function renderOnboarding(data) {
+  const preview = data.preview;
+  const rows = preview?.rows ?? [];
+  const imported = data.confirmation?.imported ?? 0;
+  const skipped =
+    data.confirmation?.skipped ??
+    rows.filter((row) => row.disposition === "SKIPPED").length;
+  const blocked = data.security?.outcome === "BLOCKED";
+  const outcome = blocked
+    ? { label: "BLOCKED SAFELY", className: "allow" }
+    : data.confirmation
+      ? { label: `${imported} IMPORTED`, className: "allow" }
+      : { label: "PREVIEW ONLY", className: "warn" };
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">MERCHANT ONBOARDING</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome ${outcome.className}">${escapeHtml(outcome.label)}</span>
+    </div>
+    <div class="result-grid">
+      ${
+        preview
+          ? `<article class="data-card">
+              <h3>1 · PROPOSED COLUMN MAPPING</h3>
+              ${Object.entries(preview.mapping)
+                .filter(([key]) => key !== "attributeColumns")
+                .map(
+                  ([field, column]) =>
+                    `<div class="metric"><span>${escapeHtml(field)}</span><strong>${escapeHtml(column ?? "DEFAULT")}</strong></div>`,
+                )
+                .join("")}
+              <div class="confirmation">Confirmation fingerprint ${escapeHtml(shortHash(preview.confirmationFingerprint))}</div>
+            </article>`
+          : ""
+      }
+      ${
+        preview
+          ? `<article class="data-card gates">
+              <h3>2 · ROW-BY-ROW PREVIEW</h3>
+              ${rows.map(importRow).join("")}
+              <div class="audit-summary"><span class="chip allow">${rows.filter((row) => row.disposition === "READY" || row.disposition === "IMPORTED").length} READY</span><span class="chip warn">${skipped} SKIPPED</span></div>
+            </article>`
+          : ""
+      }
+      ${
+        data.security
+          ? `<article class="data-card gates">
+              <h3>REDIRECT SECURITY TRACE</h3>
+              <div class="metric"><span>Outcome</span><strong>${escapeHtml(data.security.outcome)}</strong></div>
+              <div class="metric"><span>Network connections</span><strong>${data.security.transportCalls}</strong></div>
+              <p class="unknown-note">${escapeHtml(data.security.refusal)}</p>
+              <p class="gate-detail">${escapeHtml(data.security.lesson)}</p>
+            </article>`
+          : ""
+      }
+      ${
+        data.catalog
+          ? `<article class="data-card gates">
+              <h3>3 · TRUSTED / UNTRUSTED CATALOG</h3>
+              ${data.catalog.products.map(catalogProduct).join("")}
+            </article>
+            <article class="data-card gates">
+              <h3>FIELD PROVENANCE</h3>
+              ${data.catalog.provenance.map((source) => `<div class="discovery-row"><code>${escapeHtml(source.sku)}.${escapeHtml(source.field_name)}</code><span>${escapeHtml(source.source_type)} · ${escapeHtml(source.source_path)}</span></div>`).join("")}
+            </article>`
+          : ""
+      }
+      ${
+        data.protectedExistingPrice
+          ? `<article class="data-card"><h3>MERGE-ONLY PROOF</h3><div class="metric"><span>Existing price versions</span><strong>${data.protectedExistingPrice.length}</strong></div><div class="metric"><span>Protected price</span><strong>${money(data.protectedExistingPrice[0])}</strong></div><p class="gate-detail">The ₹1.00 file row was recorded as EXISTING_SKU and never became a price update.</p></article>`
+          : ""
+      }
+      ${
+        data.enrichment
+          ? `<article class="data-card"><h3>HUMAN REVIEW GATE</h3><div class="metric"><span>Initial status</span><strong>${escapeHtml(data.enrichment.proposal.status)}</strong></div><div class="metric"><span>Before review</span><strong>${escapeHtml(JSON.stringify(data.enrichment.beforeReview))}</strong></div><div class="metric"><span>Human decision</span><strong>${escapeHtml(data.enrichment.reviewed.status)}</strong></div><div class="metric"><span>After review</span><strong>${escapeHtml(JSON.stringify(data.enrichment.afterReview))}</strong></div></article>`
+          : ""
+      }
+      ${
+        data.databaseMutated === false
+          ? `<article class="data-card"><h3>DRY-RUN INVARIANT</h3><div class="metric"><span>Products written</span><strong>${data.productCount}</strong></div><p class="gate-detail">Preview is durable evidence, but it cannot create catalog products.</p></article>`
+          : ""
+      }
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+}
+
+function importRow(row) {
+  const style = row.disposition === "SKIPPED" ? "deny" : "allow";
+  return `<div class="call-card"><div class="call-top"><code>ROW ${row.rowNumber} · ${escapeHtml(row.normalized?.sku ?? "REJECTED")}</code><span class="chip ${style}">${escapeHtml(row.disposition)}</span></div><p class="call-reason">${escapeHtml(row.reasonCode ?? "VALIDATED")} — ${escapeHtml(row.explanation ?? "Ready for explicit confirmation")}</p></div>`;
+}
+
+function catalogProduct(product) {
+  return `<div class="catalog-split"><div><span class="provenance-label">STRUCTURED TRUTH</span><pre>${escapeHtml(JSON.stringify(product.structured, null, 2))}</pre></div><div class="untrusted"><span class="provenance-label">MERCHANT PROSE · UNTRUSTED</span><pre>${escapeHtml(JSON.stringify(product.untrusted, null, 2))}</pre></div></div>`;
+}
 
 function renderAgent(data) {
   if (data.availability === "NOT_CONFIGURED") {

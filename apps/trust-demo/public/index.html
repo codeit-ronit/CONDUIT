@@ -23,20 +23,21 @@
     <main>
       <section class="hero">
         <div>
-          <p class="eyebrow">PHASE 04 · INTERACTIVE BUILD</p>
-          <h1>AI may choose.<br />Code stays in control.</h1>
+          <p class="eyebrow">PHASE 05 · INTERACTIVE BUILD</p>
+          <h1>Bring a catalog.<br />Keep control of truth.</h1>
           <p class="hero-copy">
-            Watch a bounded buyer turn human intent into typed actions. Its model can be
-            good, flawed, or live; every effect still crosses the same trusted system.
+            Preview messy files and storefront facts before they become products. Every
+            field keeps its source, every skipped row explains why, and imports never
+            overwrite an existing price.
           </p>
         </div>
         <div class="hero-orbit" aria-hidden="true">
           <div class="orbit-ring ring-one"></div>
           <div class="orbit-ring ring-two"></div>
-          <div class="core">BOUNDED<br />BUYER</div>
-          <span class="node n1">CONFIRM</span>
-          <span class="node n2">LIMIT</span>
-          <span class="node n3">VERIFY</span>
+          <div class="core">CATALOG<br />TRUTH</div>
+          <span class="node n1">PREVIEW</span>
+          <span class="node n2">CONFIRM</span>
+          <span class="node n3">PROVENANCE</span>
         </div>
       </section>
 
@@ -73,11 +74,20 @@
             <span class="phase-state">BUILT</span>
           </article>
           <div class="phase-arrow">→</div>
-          <article class="phase-card active newest">
+          <article class="phase-card done">
             <span class="phase-number">04</span>
             <div>
               <h3>Bounded AI buyer</h3>
               <p>Typed intent · state machine · budgets · model adapters</p>
+            </div>
+            <span class="phase-state">BUILT</span>
+          </article>
+          <div class="phase-arrow">→</div>
+          <article class="phase-card active newest">
+            <span class="phase-number">05</span>
+            <div>
+              <h3>Merchant onboarding</h3>
+              <p>Preview · provenance · merge-only · safe storefronts</p>
             </div>
             <span class="phase-state">NOW</span>
           </article>
@@ -101,6 +111,7 @@
               Tool boundary
             </button>
             <button class="lab-tab" data-lab="agent" role="tab">AI buyer</button>
+            <button class="lab-tab" data-lab="onboarding" role="tab">Onboarding</button>
           </div>
           <div class="scenario-list hidden" data-list="commerce" role="list">
             <button class="scenario" data-scenario="authorized">
@@ -214,6 +225,40 @@
               <span
                 ><strong>Live OpenAI model</strong
                 ><small>Same runtime and tools</small></span
+              >
+            </button>
+          </div>
+          <div class="scenario-list hidden" data-list="onboarding" role="list">
+            <button class="scenario active" data-scenario="spreadsheet-preview">
+              <span class="scenario-icon">CSV</span>
+              <span
+                ><strong>Messy spreadsheet</strong
+                ><small>Preview, no writes</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="merge-only">
+              <span class="scenario-icon">⇥</span>
+              <span
+                ><strong>Merge-only import</strong
+                ><small>Price stays unchanged</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="structured-storefront">
+              <span class="scenario-icon">{ }</span>
+              <span
+                ><strong>Storefront facts</strong
+                ><small>JSON-LD structure only</small></span
+              >
+            </button>
+            <button class="scenario" data-scenario="ssrf-redirect">
+              <span class="scenario-icon">⛔</span>
+              <span><strong>Private redirect</strong><small>SSRF blocked</small></span>
+            </button>
+            <button class="scenario" data-scenario="enrichment-review">
+              <span class="scenario-icon">H</span>
+              <span
+                ><strong>AI enrichment</strong
+                ><small>Human review required</small></span
               >
             </button>
           </div>

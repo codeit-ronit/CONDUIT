@@ -27,10 +27,11 @@ architecture.
 
 ## Current status
 
-**Phase 4: bounded AI buyer.** Typed intent confirmation, deterministic catalog
-filtering, a budgeted state machine, scripted/flawed/OpenAI model strategies, and four
-boundary-governed commerce tools are operational. Payment and tool effects remain
-explicitly MODELLED; no real money moves.
+**Phase 5: reviewed merchant onboarding.** CSV/XLSX and structured-storefront imports
+now produce durable previews, exact confirmation fingerprints, row-level reasons,
+merge-only writes, and field provenance. SSRF-safe fetching and human-reviewed AI
+enrichment are operational. Payment and tool effects remain explicitly MODELLED; no real
+money moves.
 
 ## Local setup
 
@@ -49,8 +50,9 @@ pnpm demo:web
 ```
 
 Then open <http://127.0.0.1:4310>. Switch among **Purchase safety**, **Tool boundary**,
-and **AI buyer**. The AI workspace compares a safe scripted buyer with wrong-total,
-malformed-output, looping, impossible-request, and optional live-model scenarios.
+**AI buyer**, and **Onboarding**. The onboarding workspace visualizes a no-write
+spreadsheet preview, protected existing price, structured storefront import, blocked
+SSRF redirect, provenance, and reviewed AI enrichment.
 
 To enable the real model adapter, add `OPENAI_API_KEY` and an explicit `OPENAI_MODEL` to
 your local `.env`. The key stays on the server and must never be committed.

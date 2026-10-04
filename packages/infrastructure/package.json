@@ -17,6 +17,7 @@
     "@conduit/domain": "workspace:*",
     "@conduit/enforcement": "workspace:*",
     "@conduit/observability": "workspace:*",
+    "@conduit/onboarding": "workspace:*",
     "pg": "8.23.1"
   },
   "devDependencies": {

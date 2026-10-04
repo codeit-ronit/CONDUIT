@@ -346,3 +346,71 @@ scripted, flawed, and live-model adapters.
 Build Phase 5's first merchant-onboarding vertical slice: reviewed CSV import with
 mapping preview, row-level reasons, source provenance, merge-only defaults, and direct
 compatibility with the bounded buyer.
+
+## 2026-10-04 — Phase 5: reviewed merchant onboarding
+
+### What we built
+
+- A new `@conduit/onboarding` package for CSV/XLSX parsing, mapping inference, exact
+  normalization, storefront extraction, fingerprints, and review workflows.
+- Durable PostgreSQL import batches and rows, field-level product provenance, and AI
+  attribute proposals.
+- Preview-before-write confirmation and replay-safe, merge-only catalog transactions.
+- Schema.org JSON-LD/ProductGroup, microdata, and Open Graph extraction without model
+  interpretation of merchant prose.
+- An SSRF-resistant fetcher with public-address checks, redirect revalidation, pinned
+  connections, and redirect/time/body/content limits.
+- Five Onboarding Lab scenarios for messy files, protected prices, structured web data,
+  redirect attacks, and human-reviewed AI enrichment.
+
+### Decisions and why
+
+- **Imports propose; humans confirm.** The fingerprint binds the exact source, mapping,
+  and normalized result that was reviewed.
+- **Merge-only by default.** Existing SKUs are reasons, not update commands; explicit
+  versioned price changes stay separate.
+- **Structured facts only.** Models do not guess price or SKU from adversarial prose.
+- **Provenance per accepted field.** Later explanations do not depend on the original
+  source still existing.
+- **AI enrichment waits.** A model suggestion becomes catalog truth only after human
+  acceptance.
+
+### Bugs and learning found by evidence
+
+- The first real HTTPS check exposed Node's `lookup({ all: true })` callback shape. The
+  pinned resolver now handles both single-address and all-address calls.
+- The fixture used schema.org `Product`, while a live retailer used `ProductGroup`.
+  Standards-based group support and a regression test were added without a
+  retailer-specific selector.
+- A qualitative `InStock` value is not a numeric inventory count. The importer records
+  zero rather than inventing sellable quantity.
+- The package audit found ExcelJS's transitive `uuid` below its patched range. A scoped
+  pnpm override now resolves only that dependency to `11.1.1`; the XLSX test still
+  passes and the production audit is clean. Deprecated legacy transitive packages remain
+  a maintenance signal.
+
+### Evidence
+
+- `pnpm check` passes formatting, linting, strict type checking, 62 pure tests across 15
+  files, and all builds.
+- `pnpm db:check` passes 22 PostgreSQL tests across five files and validates all five
+  migrations twice.
+- All five Phase 5 demo endpoints run against the local PostgreSQL database.
+- `pnpm audit --prod` reports no known vulnerabilities after the scoped override.
+- On 2026-10-04, a real public Allbirds `ProductGroup` was fetched and its one product
+  imported into a fresh local USD tenant: one imported, zero skipped.
+
+### Honest limits
+
+- The public-page check is dated evidence, not a promise that a retailer's HTML will
+  never change. The visual demo uses a stable fixture.
+- Availability words are not converted to numeric stock.
+- Production still needs outbound firewalling and file-malware scanning in addition to
+  application checks.
+- Live OpenAI evaluation and real payments remain unconfigured.
+
+### Next action
+
+Build Phase 6 as a reproducible evidence system: versioned scenario expectations,
+hard-zero invariant graders, paired guardrail/control ablations, and a visible report
+that keeps scripted, modelled, referenced, and real evidence separate.

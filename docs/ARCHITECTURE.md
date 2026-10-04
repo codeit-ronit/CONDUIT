@@ -24,6 +24,30 @@ Human confirms typed intent
 Above the double line, assume mistakes and manipulation. Below it, use typed data,
 deterministic rules, database constraints, and transactions.
 
+## The catalog onboarding boundary
+
+Merchant files and storefront pages are untrusted sources. They cannot write directly to
+catalog tables:
+
+```text
+CSV/XLSX or public URL
+        │
+        ▼
+deterministic mapping/extraction → normalized rows + reasons → durable preview
+        │ exact fingerprint confirmed
+        ▼
+transactional merge of new SKUs → field provenance → bounded buyer catalog
+        │
+        ├── existing SKU: skip; preserve current price
+        └── AI attribute: pending until human review
+```
+
+Storefront fetching resolves and validates all IP addresses at every redirect, then pins
+the connection to the approved address. Only structured JSON-LD, microdata, and Open
+Graph facts become mapped fields. Descriptions remain untrusted prose. A file or page
+can therefore contribute data, but it cannot silently expand its authority into price
+changes, private-network access, or autonomous model writes.
+
 ## The bounded buyer loop
 
 The model has two jobs: propose typed intent and propose one next action. It does not

@@ -1,0 +1,19 @@
+{
+  "name": "@conduit/onboarding",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc"
+  },
+  "dependencies": {
+    "@conduit/contracts": "workspace:*",
+    "@conduit/domain": "workspace:*",
+    "@conduit/observability": "workspace:*",
+    "exceljs": "4.4.0"
+  }
+}

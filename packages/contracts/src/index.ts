@@ -34,3 +34,11 @@ export type {
 } from "./trust-contracts.js";
 export { buyerActionSchema, shoppingIntentProposalSchema } from "./agent-contracts.js";
 export type { BuyerAction, ShoppingIntentProposal } from "./agent-contracts.js";
+export {
+  confirmCatalogImportSchema,
+  importColumnMappingSchema,
+} from "./onboarding-contracts.js";
+export type {
+  ConfirmCatalogImportInput,
+  ImportColumnMapping,
+} from "./onboarding-contracts.js";

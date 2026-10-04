@@ -9,6 +9,11 @@ import { agentScenarioNames, runAgentScenario } from "./agent-scenarios.js";
 import type { AgentScenarioName } from "./agent-scenarios.js";
 import { boundaryScenarioNames, runBoundaryScenario } from "./boundary-scenarios.js";
 import type { BoundaryScenarioName } from "./boundary-scenarios.js";
+import {
+  onboardingScenarioNames,
+  runOnboardingScenario,
+} from "./onboarding-scenarios.js";
+import type { OnboardingScenarioName } from "./onboarding-scenarios.js";
 import { runScenario, scenarioNames } from "./scenarios.js";
 import type { ScenarioName } from "./scenarios.js";
 
@@ -32,11 +37,12 @@ async function handleRequest(
     if (request.method === "GET" && url.pathname === "/api/overview") {
       json(response, 200, {
         claimLevel: "MODELLED",
-        phase: 4,
+        phase: 5,
         scenarios: {
           commerce: scenarioNames,
           boundary: boundaryScenarioNames,
           agent: agentScenarioNames,
+          onboarding: onboardingScenarioNames,
         },
         phases: [
           {
@@ -59,6 +65,11 @@ async function handleRequest(
             title: "Bounded AI buyer",
             adds: "Typed intent, state machine, budgets, model adapters",
           },
+          {
+            phase: 5,
+            title: "Merchant onboarding",
+            adds: "Reviewed imports, provenance, merge-only catalog writes",
+          },
         ],
       });
       return;
@@ -70,6 +81,17 @@ async function handleRequest(
         return;
       }
       json(response, 200, await runAgentScenario(pool, name));
+      return;
+    }
+    if (request.method === "POST" && url.pathname.startsWith("/api/onboarding/")) {
+      const name = url.pathname.slice(
+        "/api/onboarding/".length,
+      ) as OnboardingScenarioName;
+      if (!onboardingScenarioNames.includes(name)) {
+        json(response, 404, { error: "Unknown onboarding scenario" });
+        return;
+      }
+      json(response, 200, await runOnboardingScenario(pool, name));
       return;
     }
     if (request.method === "POST" && url.pathname.startsWith("/api/boundary/")) {

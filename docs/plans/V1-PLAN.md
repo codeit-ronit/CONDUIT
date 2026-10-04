@@ -175,6 +175,11 @@ been executed against a real model account, so the full exit gate remains open.
 
 ## Phase 5 — merchant onboarding
 
+**Status: complete on 2026-10-04.** Durable CSV/XLSX and structured-storefront previews,
+exact human confirmation, merge-only catalog writes, field provenance, SSRF-resistant
+fetching, reviewed AI enrichment, PostgreSQL tests, and five live demo scenarios are
+operational. A dated public storefront imported successfully into a fresh local tenant.
+
 **Build**
 
 - CSV/XLSX import with inferred mapping, preview, human confirmation, row-level reasons,
@@ -240,7 +245,7 @@ been executed against a real model account, so the full exit gate remains open.
 
 ## Immediate next step
 
-After optional OpenAI credentials are configured, capture the live Phase 4 comparison.
-In parallel, begin Phase 5 with a reviewed CSV import vertical slice: mapping preview,
-explicit confirmation, row-level reasons, provenance, and merge-only writes. Imported
-products must immediately work in the bounded buyer.
+Begin Phase 6 with a versioned evaluation manifest and hard-zero safety graders. First,
+turn the existing wrong-total, schema failure, loop, SSRF, tenant, concurrency, and PII
+stories into one reproducible report. Then add paired injection and control-ablation
+experiments. Live OpenAI comparison remains optional until credentials are configured.
