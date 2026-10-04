@@ -2,6 +2,7 @@ import {
   CommerceService,
   DeterministicModelledOrderProvider,
   ModelledPaymentProvider,
+  OrderEvidenceService,
   TrustService,
 } from "@conduit/application";
 import {
@@ -14,6 +15,7 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 import { PostgresCommerceRepository } from "../src/postgres-commerce-repository.js";
+import { PostgresOrderEvidenceRepository } from "../src/postgres-order-evidence-repository.js";
 import { PostgresTrustRepository } from "../src/postgres-trust-repository.js";
 import { createDatabasePool } from "../src/postgres.js";
 
@@ -22,6 +24,7 @@ describe("Phase 2 trust kernel", () => {
   let commerce: CommerceService;
   let trust: TrustService;
   let trustRepository: PostgresTrustRepository;
+  let orderEvidence: OrderEvidenceService;
   let provider: ModelledPaymentProvider;
 
   beforeAll(() => {
@@ -31,6 +34,7 @@ describe("Phase 2 trust kernel", () => {
       new DeterministicModelledOrderProvider(),
     );
     trustRepository = new PostgresTrustRepository(pool);
+    orderEvidence = new OrderEvidenceService(new PostgresOrderEvidenceRepository(pool));
     provider = new ModelledPaymentProvider();
     trust = new TrustService(trustRepository, provider);
   });
@@ -182,6 +186,96 @@ describe("Phase 2 trust kernel", () => {
       prepared.operation.id,
     ]);
     expect(outbox.rows[0]).toEqual({ status: "DELIVERED", attempts: 1 });
+
+    const receipt = await orderEvidence.get(
+      world.tenant.id,
+      prepared.operation.orderId,
+    );
+    expect(receipt?.timeline.map((event) => [event.type, event.source])).toEqual([
+      ["ORDER_PREPARED", "TRUST_KERNEL"],
+      ["SPEND_RESERVED", "TRUST_KERNEL"],
+      ["PROVIDER_QUEUED", "TRUST_KERNEL"],
+      ["PROVIDER_ATTEMPTED", "PROVIDER_WORKER"],
+      ["PAYMENT_UNKNOWN", "PROVIDER_WORKER"],
+      ["PAYMENT_CONFIRMED", "RECONCILIATION"],
+    ]);
+  });
+
+  it("returns a tenant-scoped durable receipt with immutable price and effect evidence", async () => {
+    const world = await createTrustWorld(commerce, trust, "receipt-read", 100_000n);
+    const prepared = await trust.commit(
+      commitInput(world, "receipt-read-01", quoteFrom(world.cart)),
+    );
+    if (prepared.outcome !== "PENDING_PROVIDER")
+      throw new Error("Expected preparation");
+    await trust.processNextProviderCommand();
+
+    await commerce.changePrice({
+      tenantId: world.tenant.id,
+      productId: world.product.id,
+      price: { currency: "INR", minorUnits: "99900" },
+    });
+    const receipt = await orderEvidence.get(
+      world.tenant.id,
+      prepared.operation.orderId,
+    );
+
+    expect(receipt).toMatchObject({
+      schemaVersion: "conduit.order-evidence.v1",
+      claims: {
+        commerceState: "TESTED",
+        payment: "MODELLED",
+        auditLink: "NOT_LINKED",
+      },
+      order: {
+        id: prepared.operation.orderId,
+        tenantId: world.tenant.id,
+        status: "MODELLED",
+      },
+      operation: {
+        status: "CONFIRMED",
+        decisionReason: "AUTHORIZED",
+        providerReference: "modelled:receipt-read-01",
+      },
+      providerDelivery: { status: "DELIVERED", attempts: 1 },
+      lines: [
+        {
+          sku: "PANEER-01",
+          quantity: 2,
+          priceVersion: 1,
+        },
+      ],
+      drawdown: [{ type: "RESERVE" }, { type: "CONFIRM" }],
+      inventory: [{ quantity: 2, status: "CONFIRMED" }],
+    });
+    expect(receipt?.lines[0]?.unitPrice.minorUnits).toBe(19_900n);
+    expect(receipt?.timeline.map((event) => event.type)).toEqual([
+      "ORDER_PREPARED",
+      "SPEND_RESERVED",
+      "PROVIDER_QUEUED",
+      "PROVIDER_ATTEMPTED",
+      "PAYMENT_CONFIRMED",
+    ]);
+
+    const other = await createTrustWorld(commerce, trust, "receipt-other", 100_000n);
+    expect(
+      await orderEvidence.get(other.tenant.id, prepared.operation.orderId),
+    ).toBeNull();
+
+    await expect(
+      pool.query(
+        `UPDATE conduit.order_evidence_events SET source = 'TAMPERED'
+         WHERE tenant_id = $1 AND order_id = $2`,
+        [world.tenant.id, prepared.operation.orderId],
+      ),
+    ).rejects.toThrow("append-only");
+    await expect(
+      pool.query(
+        `DELETE FROM conduit.order_evidence_events
+         WHERE tenant_id = $1 AND order_id = $2`,
+        [world.tenant.id, prepared.operation.orderId],
+      ),
+    ).rejects.toThrow("append-only");
   });
 
   it("recovers a stale worker lease with the same provider idempotency key", async () => {

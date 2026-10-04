@@ -286,6 +286,7 @@ function renderUcpShopping(data) {
   const stages = data.stages;
   const checkout = stages.checkout.body;
   const completed = stages.finalCheckout.body;
+  const receipt = data.receipt;
   result.innerHTML = `
     <div class="result-head">
       <div><p class="eyebrow">UCP 2026-08-25 · CART + CHECKOUT</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
@@ -325,6 +326,20 @@ function renderUcpShopping(data) {
         <div class="metric"><span>External money</span><strong>NO — MODELLED PROVIDER</strong></div>
         <p class="gate-detail">The browser approval reuses the existing authorization, live repricing, stock reservation, drawdown ledger, policy, and durable provider workflow.</p>
         <a class="secondary-button" target="_blank" rel="noreferrer" href="${escapeHtml(checkout.continue_url)}">Open trusted checkout receipt ↗</a>
+      </article>
+      <article class="data-card gates">
+        <h3>5 · DURABLE ORDER EVIDENCE</h3>
+        <div class="metric"><span>Receipt contract</span><strong>${escapeHtml(receipt.schemaVersion)}</strong></div>
+        <div class="metric"><span>Operation</span><strong>${escapeHtml(receipt.operation.status)}</strong></div>
+        <div class="metric"><span>Provider attempts</span><strong>${receipt.providerDelivery.attempts}</strong></div>
+        <div class="metric"><span>Payment evidence</span><strong>${escapeHtml(receipt.claims.payment)}</strong></div>
+        ${receipt.timeline
+          .map(
+            (event) =>
+              `<div class="gate-row"><span class="gate-state pass">${event.sequence}</span><div><strong>${escapeHtml(humanize(event.type))}</strong><p>${escapeHtml(event.source)}</p></div></div>`,
+          )
+          .join("")}
+        <p class="gate-detail">The event stream is append-only. Razorpay callbacks, reconciliation, and refunds will extend this same timeline in the next provider phase.</p>
       </article>
     </div>
     <button class="raw-toggle">Show exact response JSON</button>

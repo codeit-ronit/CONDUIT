@@ -742,3 +742,43 @@ constraints, and adversarial live-model measurement are the differentiating work
 Close Phase 7 with the durable order/receipt read model. Then run the prewritten safety
 suite repeatedly against at least two live model providers before beginning Razorpay
 Test Mode integration.
+
+## 2026-10-05 — Phase 7 slice 5: durable order and receipt evidence
+
+### What we built
+
+- A versioned `conduit.order-evidence.v1` application contract and dedicated read
+  service/repository.
+- A tenant-scoped, append-only `order_evidence_events` table with stable event keys,
+  PostgreSQL update/delete rejection, indexes, and honest backfill events.
+- Transactional events for order preparation, spend reservation, provider queueing,
+  provider attempts, unknown outcomes, confirmation, decline, and reconciliation.
+- One repeatable-read receipt containing immutable line prices, authorization,
+  operation, outbox, drawdown, inventory, and chronological events.
+- Receipt visualization in both the trusted checkout page and UCP Cart-to-Checkout lab.
+
+### Decisions and why
+
+- **Current state plus history, not full event sourcing.** Operational tables remain the
+  authority; the new stream explains externally important transitions.
+- **Append in the state transaction.** An event cannot claim confirmation if the
+  corresponding order update rolls back.
+- **Stable event keys.** Recovery/replay cannot duplicate evidence.
+- **One snapshot.** Sequential queries inside `REPEATABLE READ READ ONLY` prevent a
+  mixed-time receipt and avoid deprecated concurrent use of one `pg` client.
+- **Do not invent audit correlation.** The receipt says `NOT_LINKED` until checkout,
+  boundary, provider, and audit share a durable correlation identity.
+
+### Evidence
+
+- `pnpm check` passes formatting, lint, typecheck, 79 tests across 21 files, and all
+  builds.
+- `pnpm db:check` applies eight migrations idempotently and passes 32 PostgreSQL tests
+  across eight files.
+- Tests cover immutable historical pricing, tenant isolation, append-only enforcement,
+  direct confirmation, and unknown-to-reconciled event ordering.
+
+### Next action
+
+Begin Phase 8 by versioning the live-model run contract and generalizing the provider
+adapter for repeated, prewritten experiments across at least two model providers.

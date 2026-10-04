@@ -239,14 +239,14 @@ zero hard violations, while the controls-off arm demonstrates one L3 and one L4 
 
 ## Phase 7 — presentable product and interoperability
 
-**Status: in progress from 2026-10-04.** Slice 1 adds a version-pinned UCP `2026-08-25`
+**Status: complete on 2026-10-05.** Slice 1 adds a version-pinned UCP `2026-08-25`
 catalog boundary. Slice 2 adds a complete evidence-labelled buyer journey and
 authenticated MCP catalog. Slice 3 adds a merchant catalog/provenance console with
 durable, revocable, session-derived merchant scope. Slice 4 adds UCP cart and checkout,
 payload-bound idempotency, and trusted buyer handoff over the canonical trust kernel.
-Production identity, official conformance, and dated provider validation remain open.
-Further breadth is paused. Phase 7 closes only after the durable order/receipt read
-model exists and every surface labels external evidence honestly.
+Slice 5 adds the durable order/receipt read model and append-only effect timeline.
+Production identity, official conformance, and dated provider validation remain open
+external-evidence gates rather than unfinished Phase 7 feature breadth.
 
 **Build**
 
@@ -367,7 +367,6 @@ merchant-readiness and business-spend products simultaneously.
 
 ## Immediate next step
 
-Close Phase 7 with the durable order/receipt read model and no new breadth. Then execute
-Phase 8 live-model evaluation before Phase 9 Razorpay Test Mode integration. Sentinel is
-deferred; selected ideas may later harden the provider-tool boundary, but it is not on
-the critical path to proving CONDUIT.
+Execute Phase 8 live-model evaluation before Phase 9 Razorpay Test Mode integration.
+Sentinel is deferred; selected ideas may later harden the provider-tool boundary, but it
+is not on the critical path to proving CONDUIT.

@@ -102,6 +102,23 @@ describe("Phase 7 UCP protocol slice", () => {
         publicUcpConformance: "NOT_CLAIMED",
         bearerSecretReturnedToBrowser: false,
       },
+      receipt: {
+        schemaVersion: "conduit.order-evidence.v1",
+        claims: {
+          commerceState: "TESTED",
+          payment: "MODELLED",
+          auditLink: "NOT_LINKED",
+        },
+        operation: { status: "CONFIRMED" },
+        providerDelivery: { status: "DELIVERED", attempts: 1 },
+        timeline: [
+          { type: "ORDER_PREPARED" },
+          { type: "SPEND_RESERVED" },
+          { type: "PROVIDER_QUEUED" },
+          { type: "PROVIDER_ATTEMPTED" },
+          { type: "PAYMENT_CONFIRMED" },
+        ],
+      },
     });
   });
 

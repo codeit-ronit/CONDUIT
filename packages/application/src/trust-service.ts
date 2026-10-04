@@ -80,7 +80,7 @@ export class TrustService {
     } catch {
       result = { outcome: "UNKNOWN", reference: `unknown:${command.operationKey}` };
     }
-    return this.repository.completeProviderCommand(command, result);
+    return this.repository.completeProviderCommand(command, result, "AUTHORIZE");
   }
 
   /** UNKNOWN is queried at the provider; authorize is never blindly called again. */
@@ -91,7 +91,7 @@ export class TrustService {
       purchaseOperationId(rawOperationId),
     );
     const result = await this.provider.lookup(command);
-    return this.repository.completeProviderCommand(command, result);
+    return this.repository.completeProviderCommand(command, result, "RECONCILIATION");
   }
 }
 

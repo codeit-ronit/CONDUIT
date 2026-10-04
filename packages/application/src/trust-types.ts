@@ -94,6 +94,8 @@ export type ProviderResult =
   | { readonly outcome: "DECLINED"; readonly reference: string }
   | { readonly outcome: "UNKNOWN"; readonly reference: string };
 
+export type ProviderCompletionSource = "AUTHORIZE" | "RECONCILIATION";
+
 export interface PaymentProvider {
   authorize(command: ProviderCommand): Promise<ProviderResult>;
   lookup(command: ProviderCommand): Promise<ProviderResult>;
@@ -112,6 +114,7 @@ export interface TrustRepository {
   completeProviderCommand(
     command: ProviderCommand,
     result: ProviderResult,
+    source: ProviderCompletionSource,
   ): Promise<TrustedPurchaseOperation>;
   getOperation(
     tenantId: TenantId,

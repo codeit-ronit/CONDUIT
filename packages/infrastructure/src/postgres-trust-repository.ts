@@ -4,6 +4,7 @@ import type {
   NewAuthorizationGrant,
   PrepareTrustedCommit,
   ProviderCommand,
+  ProviderCompletionSource,
   ProviderResult,
   TrustRepository,
   TrustedCommitResult,
@@ -91,6 +92,9 @@ interface CommandRow extends QueryResultRow {
   readonly operation_key: string;
   readonly currency: string;
   readonly total_minor_units: string;
+  readonly tenant_id?: string;
+  readonly order_id?: string;
+  readonly attempts?: number;
 }
 
 export class PostgresTrustRepository implements TrustRepository {
@@ -355,6 +359,41 @@ export class PostgresTrustRepository implements TrustRepository {
          ) VALUES ($1, $2, 'AUTHORIZE_PAYMENT', 'PENDING')`,
         [input.tenantId, operationId],
       );
+      await appendOrderEvent(client, {
+        tenantId: input.tenantId,
+        orderId: createdOrderId,
+        operationId,
+        eventKey: `${operationId}:order-prepared`,
+        eventType: "ORDER_PREPARED",
+        source: "TRUST_KERNEL",
+        payload: {
+          currency: liveQuote.currency,
+          totalMinorUnits: liveQuote.statedTotal.minorUnits.toString(),
+          lineCount: lineRows.length,
+        },
+      });
+      await appendOrderEvent(client, {
+        tenantId: input.tenantId,
+        orderId: createdOrderId,
+        operationId,
+        eventKey: `${operationId}:spend-reserved`,
+        eventType: "SPEND_RESERVED",
+        source: "TRUST_KERNEL",
+        payload: {
+          grantId: input.grantId,
+          currency: liveQuote.currency,
+          minorUnits: liveQuote.statedTotal.minorUnits.toString(),
+        },
+      });
+      await appendOrderEvent(client, {
+        tenantId: input.tenantId,
+        orderId: createdOrderId,
+        operationId,
+        eventKey: `${operationId}:provider-queued`,
+        eventType: "PROVIDER_QUEUED",
+        source: "TRUST_KERNEL",
+        payload: { eventType: "AUTHORIZE_PAYMENT" },
+      });
 
       return {
         outcome: "PENDING_PROVIDER",
@@ -412,9 +451,25 @@ export class PostgresTrustRepository implements TrustRepository {
          FROM next, conduit.purchase_operations p
          WHERE o.id = next.id AND p.id = o.operation_id
          RETURNING o.id AS outbox_id, p.id AS operation_id,
-                   p.operation_key, p.currency, p.total_minor_units`,
+                   p.operation_key, p.currency, p.total_minor_units,
+                   p.tenant_id, o.attempts,
+                   (SELECT id FROM conduit.orders WHERE operation_id = p.id) AS order_id`,
       );
-      return result.rows[0] ? mapCommand(result.rows[0]) : null;
+      const row = result.rows[0];
+      if (!row) return null;
+      if (!row.tenant_id || !row.order_id || row.attempts === undefined) {
+        throw new Error("Claimed provider command is missing evidence identity");
+      }
+      await appendOrderEvent(client, {
+        tenantId: row.tenant_id,
+        orderId: row.order_id,
+        operationId: row.operation_id,
+        eventKey: `${row.outbox_id}:attempt:${String(row.attempts)}`,
+        eventType: "PROVIDER_ATTEMPTED",
+        source: "PROVIDER_WORKER",
+        payload: { attempt: row.attempts, eventType: "AUTHORIZE_PAYMENT" },
+      });
+      return mapCommand(row);
     });
   }
 
@@ -437,6 +492,7 @@ export class PostgresTrustRepository implements TrustRepository {
   public async completeProviderCommand(
     command: ProviderCommand,
     result: ProviderResult,
+    source: ProviderCompletionSource,
   ): Promise<TrustedPurchaseOperation> {
     return this.transaction(async (client) => {
       const current = await this.getOperationWithClient(
@@ -471,6 +527,12 @@ export class PostgresTrustRepository implements TrustRepository {
            WHERE id = $1`,
           [command.outboxId],
         );
+        await appendOrderEventForOperation(client, command.operationId, {
+          eventKey: `${command.operationId}:payment-unknown:${source.toLowerCase()}`,
+          eventType: "PAYMENT_UNKNOWN",
+          source: source === "AUTHORIZE" ? "PROVIDER_WORKER" : "RECONCILIATION",
+          payload: { providerReference: result.reference },
+        });
         return this.getOperationWithClient(client, command.operationId, false);
       }
 
@@ -552,6 +614,13 @@ export class PostgresTrustRepository implements TrustRepository {
          SET status = 'DELIVERED', updated_at = clock_timestamp() WHERE id = $1`,
         [command.outboxId],
       );
+      await appendOrderEventForOperation(client, command.operationId, {
+        eventKey: `${command.operationId}:payment-${result.outcome.toLowerCase()}:${source.toLowerCase()}`,
+        eventType:
+          result.outcome === "SUCCEEDED" ? "PAYMENT_CONFIRMED" : "PAYMENT_DECLINED",
+        source: source === "AUTHORIZE" ? "PROVIDER_WORKER" : "RECONCILIATION",
+        payload: { providerReference: result.reference },
+      });
       return this.getOperationWithClient(client, command.operationId, false);
     });
   }
@@ -652,6 +721,62 @@ export class PostgresTrustRepository implements TrustRepository {
       client.release();
     }
   }
+}
+
+interface NewOrderEvidenceEvent {
+  readonly tenantId: string;
+  readonly orderId: string;
+  readonly operationId: string;
+  readonly eventKey: string;
+  readonly eventType: string;
+  readonly source: string;
+  readonly payload: Readonly<Record<string, unknown>>;
+}
+
+async function appendOrderEvent(
+  client: PoolClient,
+  event: NewOrderEvidenceEvent,
+): Promise<void> {
+  await client.query(
+    `INSERT INTO conduit.order_evidence_events (
+       tenant_id, order_id, operation_id, event_key, event_type, source, payload
+     ) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+     ON CONFLICT (tenant_id, event_key) DO NOTHING`,
+    [
+      event.tenantId,
+      event.orderId,
+      event.operationId,
+      event.eventKey,
+      event.eventType,
+      event.source,
+      JSON.stringify(event.payload),
+    ],
+  );
+}
+
+async function appendOrderEventForOperation(
+  client: PoolClient,
+  operationId: PurchaseOperationId,
+  event: Omit<NewOrderEvidenceEvent, "tenantId" | "orderId" | "operationId">,
+): Promise<void> {
+  const identity = await client.query<{
+    readonly tenant_id: string;
+    readonly order_id: string;
+  }>(
+    `SELECT p.tenant_id, o.id AS order_id
+     FROM conduit.purchase_operations p
+     JOIN conduit.orders o ON o.operation_id = p.id
+     WHERE p.id = $1`,
+    [operationId],
+  );
+  const row = identity.rows[0];
+  if (!row) throw new Error("Operation has no order evidence identity");
+  await appendOrderEvent(client, {
+    ...event,
+    tenantId: row.tenant_id,
+    orderId: row.order_id,
+    operationId,
+  });
 }
 
 function mapGrant(row: GrantRow): AuthorizationGrant {

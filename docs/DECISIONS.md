@@ -21,6 +21,7 @@ changes, add a new ADR that supersedes the old one.
 | [ADR-0013](decisions/ADR-0013-session-derived-merchant-scope.md)              | Derive merchant scope from durable sessions        | Accepted | Browser input cannot select another tenant or merchant                       |
 | [ADR-0014](decisions/ADR-0014-ucp-checkout-requires-trusted-buyer-handoff.md) | Require trusted buyer handoff for UCP checkout     | Accepted | Agents can prepare checkout without gaining final purchase authority         |
 | [ADR-0015](decisions/ADR-0015-evidence-before-breadth.md)                     | Require external evidence before product breadth   | Accepted | Converts local engineering claims into model, provider, and client evidence  |
+| [ADR-0016](decisions/ADR-0016-append-only-order-evidence.md)                  | Append order evidence; read one consistent receipt | Accepted | Preserves effect history without creating a second order state machine       |
 
 ## Short-form product decisions
 

@@ -149,11 +149,30 @@ or ownership need.
 10. A definite success appends CONFIRM; a definite failure appends RELEASE. An ambiguous
     result remains UNKNOWN and is reconciled by querying the provider.
 11. A receipt links the confirmed intent, catalog versions, checkout, policy decision,
-    ledger entries, provider reference, and audit-chain position.
+    ledger entries, provider reference, and append-only order evidence. Its separate
+    tool-audit correlation is reported honestly until a durable link exists.
 
 The outbox means the database transaction and external network call are not pretended to
 be one atomic action. Instead, incomplete work is durable and can be resumed safely
 after a crash.
+
+## Durable order evidence
+
+Mutable operational rows answer the current state; an append-only evidence stream keeps
+the externally important path that produced it:
+
+```text
+order + price snapshots ─┐
+authorization grant ─────┤
+drawdown + inventory ────┼─ repeatable-read receipt → trusted UI / evidence export
+provider outbox ─────────┤
+order evidence events ───┘
+```
+
+Evidence events are written in the same transaction as order/provider state changes,
+deduplicated by stable event keys, and protected from update/delete by PostgreSQL. The
+receipt does not currently claim a tool-audit-chain link because the UCP checkout has no
+durable enforcement run/call correlation yet.
 
 ## Data ownership
 

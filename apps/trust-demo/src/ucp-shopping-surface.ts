@@ -4,6 +4,7 @@ import {
   CommerceService,
   DeterministicModelledOrderProvider,
   ModelledPaymentProvider,
+  OrderEvidenceService,
   TrustService,
 } from "@conduit/application";
 import {
@@ -11,9 +12,11 @@ import {
   createBuyerSchema,
   trustedCommitSchema,
 } from "@conduit/contracts";
+import { orderId } from "@conduit/domain";
 import type { PricedCart } from "@conduit/domain";
 import {
   PostgresCommerceRepository,
+  PostgresOrderEvidenceRepository,
   PostgresTrustRepository,
 } from "@conduit/infrastructure";
 import type { Pool, QueryResultRow } from "@conduit/infrastructure";
@@ -62,6 +65,9 @@ export async function createUcpShoppingDemoSurface(pool: Pool, baseUrl: string) 
   const trust = new TrustService(
     new PostgresTrustRepository(pool),
     new ModelledPaymentProvider(),
+  );
+  const orderEvidence = new OrderEvidenceService(
+    new PostgresOrderEvidenceRepository(pool),
   );
   const suffix = crypto.randomUUID().slice(0, 8);
   const tenant = await commerce.createTenant({
@@ -373,7 +379,7 @@ export async function createUcpShoppingDemoSurface(pool: Pool, baseUrl: string) 
         return { status: 403, body: { error: "Invalid review link" } };
       }
       if (checkout.status === "COMPLETED") {
-        return { status: 200, body: await checkoutResponse(credential, checkout) };
+        return { status: 200, body: await trustedReviewResponse(checkout) };
       }
       const cart = await commerce.getCart({
         tenantId: tenant.id,
@@ -413,7 +419,7 @@ export async function createUcpShoppingDemoSurface(pool: Pool, baseUrl: string) 
       );
       const completed = await ownedCheckout(credential, checkout.id);
       if (!completed) throw new Error("Completed checkout disappeared");
-      return { status: 200, body: await checkoutResponse(credential, completed) };
+      return { status: 200, body: await trustedReviewResponse(completed) };
     });
   }
 
@@ -450,7 +456,7 @@ export async function createUcpShoppingDemoSurface(pool: Pool, baseUrl: string) 
     if (!safeDigestMatch(checkout.review_token_digest, sha256(token))) {
       return { status: 403, body: { error: "Invalid review link" } };
     }
-    return { status: 200, body: await checkoutResponse(credential, checkout) };
+    return { status: 200, body: await trustedReviewResponse(checkout) };
   }
 
   async function runRoundTrip() {
@@ -533,6 +539,7 @@ export async function createUcpShoppingDemoSurface(pool: Pool, baseUrl: string) 
         concurrentApprovalReplay: approvalReplay,
         finalCheckout: afterApproval,
       },
+      receipt: evidenceFrom(approved.body),
       claims: {
         databaseAndTrustChecks: "REAL_LOCAL_DATABASE",
         paymentProvider: "MODELLED_NO_EXTERNAL_MONEY",
@@ -675,6 +682,14 @@ export async function createUcpShoppingDemoSurface(pool: Pool, baseUrl: string) 
     return projectUcpCheckout(state);
   }
 
+  async function trustedReviewResponse(row: CheckoutRow) {
+    const checkout = await checkoutResponse(credential, row);
+    if (!row.order_id) return checkout;
+    const evidence = await orderEvidence.get(tenant.id, orderId(row.order_id));
+    if (!evidence) throw new Error("Completed checkout has no order evidence");
+    return { ...checkout, conduit_evidence: evidence };
+  }
+
   function reviewToken(checkoutId: string): string {
     return createHmac("sha256", reviewSecret).update(checkoutId).digest("hex");
   }
@@ -712,6 +727,13 @@ function objectId(value: unknown): string {
     throw new Error("Protocol response has no resource id");
   }
   return String(value.id);
+}
+
+function evidenceFrom(value: unknown): unknown {
+  if (typeof value !== "object" || value === null || !("conduit_evidence" in value)) {
+    throw new Error("Trusted checkout response has no order evidence");
+  }
+  return value.conduit_evidence;
 }
 
 function sha256(value: string): string {

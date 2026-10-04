@@ -70,6 +70,11 @@ cannot honestly be zero.
 
 ### Gate 0 — close the existing product slice
 
+**Status: complete on 2026-10-05.** The durable `conduit.order-evidence.v1` read model,
+append-only effect timeline, tenant-isolation tests, and trusted-checkout visualization
+are operational. The receipt explicitly reports that the separate tool-audit chain is
+not yet correlated.
+
 Build only the durable order/receipt read model needed by payment, refund, and external
 agent flows. Remove or relabel any demo copy that implies a real model, real payment, or
 protocol conformance where none exists.

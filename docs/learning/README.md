@@ -15,3 +15,4 @@ evidence, and limits.
 10. [Phase 7, slice 2: Buyer journey and authenticated MCP](PHASE-7-BUYER-JOURNEY-AND-MCP.md)
 11. [Phase 7, slice 3: Merchant console and durable sessions](PHASE-7-MERCHANT-CONSOLE-AND-SESSIONS.md)
 12. [Phase 7, slice 4: UCP cart and checkout](PHASE-7-UCP-CART-AND-CHECKOUT.md)
+13. [Phase 7, slice 5: Durable order and receipt evidence](PHASE-7-ORDER-EVIDENCE.md)
