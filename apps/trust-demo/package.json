@@ -18,6 +18,7 @@
     "@conduit/enforcement": "workspace:*",
     "@conduit/evals": "workspace:*",
     "@conduit/infrastructure": "workspace:*",
+    "@conduit/merchant-console": "workspace:*",
     "@conduit/observability": "workspace:*",
     "@conduit/onboarding": "workspace:*",
     "@conduit/protocol-adapters": "workspace:*",

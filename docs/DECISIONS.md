@@ -18,6 +18,7 @@ changes, add a new ADR that supersedes the old one.
 | [ADR-0010](decisions/ADR-0010-prewritten-evaluations-and-causal-ablations.md) | Prewrite evals; compare control ablations          | Accepted | Hard failures stay visible and paired attacks demonstrate causal protection  |
 | [ADR-0011](decisions/ADR-0011-version-pinned-ucp-boundary.md)                 | Pin UCP and advertise only implemented slices      | Accepted | Protocol change stays at the edge and interoperability claims remain honest  |
 | [ADR-0012](decisions/ADR-0012-authenticated-mcp-and-evidence-led-journey.md)  | Authenticate MCP; present one evidence-led journey | Accepted | Transport cannot choose authority, and the demo reuses tested product paths  |
+| [ADR-0013](decisions/ADR-0013-session-derived-merchant-scope.md)              | Derive merchant scope from durable sessions        | Accepted | Browser input cannot select another tenant or merchant                       |
 
 ## Short-form product decisions
 

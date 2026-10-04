@@ -59,6 +59,9 @@ importers:
       '@conduit/infrastructure':
         specifier: workspace:*
         version: link:../../packages/infrastructure
+      '@conduit/merchant-console':
+        specifier: workspace:*
+        version: link:../../packages/merchant-console
       '@conduit/observability':
         specifier: workspace:*
         version: link:../../packages/observability
@@ -163,6 +166,9 @@ importers:
       '@conduit/enforcement':
         specifier: workspace:*
         version: link:../enforcement
+      '@conduit/merchant-console':
+        specifier: workspace:*
+        version: link:../merchant-console
       '@conduit/observability':
         specifier: workspace:*
         version: link:../observability
@@ -182,6 +188,12 @@ importers:
       node-pg-migrate:
         specifier: 9.0.0
         version: 9.0.0(@types/pg@8.23.1)(pg@8.23.1)
+
+  packages/merchant-console:
+    devDependencies:
+      '@types/node':
+        specifier: 26.6.4
+        version: 26.6.4
 
   packages/observability: {}
 

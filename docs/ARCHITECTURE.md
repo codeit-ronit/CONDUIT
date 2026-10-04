@@ -48,6 +48,24 @@ Graph facts become mapped fields. Descriptions remain untrusted prose. A file or
 can therefore contribute data, but it cannot silently expand its authority into price
 changes, private-network access, or autonomous model writes.
 
+## The merchant-console identity boundary
+
+The merchant console never accepts tenant or merchant scope from the browser:
+
+```text
+password → salted scrypt comparison → random browser token
+                                      │
+                         PostgreSQL stores only token digest
+                                      ↓
+active session → merchant membership → scoped catalog + provenance read
+```
+
+The raw session token travels only in an `HttpOnly`, `SameSite=Strict` cookie. Logout,
+expiry, and password changes revoke database sessions. Catalog and provenance queries
+receive tenant/merchant identity only from the joined session membership. This local
+identity is a product demonstration, not a replacement for production MFA, SSO,
+recovery, throttling, HTTPS, and security-event controls.
+
 ## The evidence layer
 
 `@conduit/evals` depends on domain/security modules but no production module depends on
@@ -141,7 +159,7 @@ after a crash.
 
 | Module            | Owns                                                     | Must not decide              |
 | ----------------- | -------------------------------------------------------- | ---------------------------- |
-| Identity/tenancy  | actors, memberships, tenant scope                        | prices or payments           |
+| Identity/tenancy  | users, sessions, memberships, tenant scope               | prices or payments           |
 | Catalog           | products, attributes, price versions, source provenance  | cart lifecycle               |
 | Cart              | quantities and cart state                                | authoritative price storage  |
 | Authorization     | user-granted scope and drawdown events                   | product ranking              |

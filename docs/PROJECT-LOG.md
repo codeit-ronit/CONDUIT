@@ -593,3 +593,62 @@ Build the merchant-facing catalog/provenance console and durable browser identit
 research and implement the current UCP cart/checkout lifecycle behind executable schema
 and finalization tests. Keep live-model comparison and payment-sandbox validation as
 separate evidence tracks.
+
+## 2026-10-04 — Phase 7 slice 3: merchant console and durable sessions
+
+### What we built
+
+- A new `@conduit/merchant-console` module that separates browser identity and the
+  merchant read model from commerce, onboarding, and protocol adapters.
+- PostgreSQL merchant users, one V1 merchant membership per user, and expiring,
+  revocable browser sessions.
+- Salted scrypt password digests, 256-bit random session tokens, and database storage of
+  only SHA-256 token digests.
+- `HttpOnly`, `SameSite=Strict` session cookies, same-origin login/logout checks, an
+  eight-hour expiry, logout revocation, and old-session revocation after password
+  change.
+- A merchant catalog console showing current price, version, stock, attributes, and all
+  durable field-level import provenance.
+- An easy local login experience whose default credential is published only outside
+  production and only when no custom demo password is configured.
+
+### Decisions and why
+
+- **Scope comes from the session.** The catalog route accepts no tenant or merchant ID,
+  removing a browser-controlled cross-tenant selector.
+- **Hash different secrets differently.** Human passwords use slow salted scrypt;
+  high-entropy generated tokens use SHA-256 for indexed lookup.
+- **Keep the raw token out of JavaScript and PostgreSQL.** The browser receives it only
+  as an HttpOnly cookie and the database receives only its digest.
+- **Reuse onboarding provenance.** The console joins existing durable evidence instead
+  of creating a second source of truth.
+- **Call identity modelled.** A local demo account is not production SSO, MFA, recovery,
+  or identity assurance.
+
+### Evidence and learning
+
+- `pnpm test` passes 78 pure tests across 21 files.
+- `pnpm db:check` applies all six migrations twice and passes 30 PostgreSQL tests across
+  eight files.
+- The two-merchant integration test proves an authenticated Merchant A session contains
+  none of Merchant B's product data.
+- Unchanged credential provisioning preserves a session across restart-style setup;
+  changing the password revokes old sessions.
+- The live HTTP flow returned 401 before login, 401 for a wrong password, 200 for login,
+  two products plus 14 provenance rows, 200 for logout, and 401 for the old cookie.
+
+### Honest limits
+
+- The local demo has no rate limiting, MFA, recovery, email verification, security
+  notifications, device management, or enterprise identity provider.
+- Local HTTP cannot protect a `Secure` cookie; the attribute is enabled only when the
+  configured public base URL is HTTPS.
+- One user maps to one merchant membership in V1. Multi-merchant account switching needs
+  an explicit, audited design rather than a caller-provided merchant ID.
+- Merchant writes remain in the reviewed onboarding flows; this console is read-only.
+
+### Next action
+
+Research the current UCP cart and checkout contracts, then build the smallest adapter
+over CONDUIT's existing cart and trusted-commit state machines. Advertise it only after
+schema, finalization, idempotency, failure, and recovery tests pass.

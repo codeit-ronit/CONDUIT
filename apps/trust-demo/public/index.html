@@ -105,7 +105,7 @@
             <span class="phase-number">07</span>
             <div>
               <h3>Product + protocol</h3>
-              <p>Buyer journey · authenticated MCP · scoped UCP catalog</p>
+              <p>Buyer journey · merchant sessions · authenticated MCP</p>
             </div>
             <span class="phase-state">NOW</span>
           </article>
@@ -130,6 +130,9 @@
             >
               Buyer journey
             </button>
+            <button class="lab-tab" data-lab="merchant" role="tab">
+              Merchant console
+            </button>
             <button class="lab-tab" data-lab="commerce" role="tab">
               Purchase safety
             </button>
@@ -147,6 +150,15 @@
               <span
                 ><strong>Complete buyer journey</strong
                 ><small>Intent to evidence-linked receipt</small></span
+              >
+            </button>
+          </div>
+          <div class="scenario-list hidden" data-list="merchant" role="list">
+            <button class="scenario active" data-scenario="catalog-provenance">
+              <span class="scenario-icon">SRC</span>
+              <span
+                ><strong>Catalog evidence</strong
+                ><small>Session-scoped products + sources</small></span
               >
             </button>
           </div>

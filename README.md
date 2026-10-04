@@ -27,11 +27,12 @@ architecture.
 
 ## Current status
 
-**Phase 7, slice 2: evidence-led buyer journey and authenticated MCP.** One click now
-explains authorization → selection → trusted commit → modelled payment → durable receipt
-using the existing bounded-agent path. An official modern MCP client also discovers and
-calls a credential-scoped UCP `search_catalog` tool backed by PostgreSQL. Full UCP MCP
-conformance is not claimed. Payment remains explicitly MODELLED; no real money moves.
+**Phase 7, slice 3: buyer and merchant product surfaces.** The buyer journey explains
+authorization → selection → trusted commit → modelled payment → durable receipt. The new
+merchant console uses a revocable PostgreSQL session to show only its scoped products,
+current price/stock, and field-level import provenance. Authenticated MCP catalog access
+remains available. Production identity and full UCP conformance are not claimed; payment
+remains MODELLED and no real money moves.
 
 ## Local setup
 
@@ -49,10 +50,10 @@ For the visual phase-by-phase demo:
 pnpm demo:web
 ```
 
-Then open <http://127.0.0.1:4310>. Start with **Buyer journey** to see the full purchase
-and its evidence. **UCP + MCP** shows discovery, authenticated MCP catalog access, and
-identity/version failures that stop before data access. The earlier safety, boundary,
-AI, onboarding, and evaluation labs remain available.
+Then open <http://127.0.0.1:4310>. Start with **Buyer journey**, then open **Merchant
+console** and use the prefilled local demo credentials. **UCP + MCP** shows discovery,
+authenticated MCP catalog access, and fail-closed identity/version paths. Earlier
+safety, AI, onboarding, and evaluation labs remain available.
 
 For the machine-readable safety gate:
 

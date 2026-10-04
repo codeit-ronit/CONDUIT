@@ -13,3 +13,4 @@ evidence, and limits.
 8. [Phase 6: Evidence, evaluation, and red team](PHASE-6-EVIDENCE-AND-RED-TEAM.md)
 9. [Phase 7, slice 1: Product surface and UCP boundary](PHASE-7-PRODUCT-AND-UCP-SLICE-1.md)
 10. [Phase 7, slice 2: Buyer journey and authenticated MCP](PHASE-7-BUYER-JOURNEY-AND-MCP.md)
+11. [Phase 7, slice 3: Merchant console and durable sessions](PHASE-7-MERCHANT-CONSOLE-AND-SESSIONS.md)

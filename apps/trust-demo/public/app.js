@@ -8,6 +8,7 @@ const result = document.querySelector("#result");
 let activeLab = "journey";
 const selectedByLab = {
   journey: "buyer-purchase",
+  merchant: "catalog-provenance",
   commerce: "authorized",
   boundary: "trusted-read",
   agent: "scripted",
@@ -66,11 +67,20 @@ runButton.addEventListener("click", async () => {
                 ? `/api/protocol/${selected}`
                 : activeLab === "journey"
                   ? `/api/journey/${selected}`
-                  : `/api/scenarios/${selected}`;
-    const response = await fetch(endpoint, { method: "POST" });
+                  : activeLab === "merchant"
+                    ? "/api/merchant/catalog"
+                    : `/api/scenarios/${selected}`;
+    const response = await fetch(endpoint, {
+      method: activeLab === "merchant" ? "GET" : "POST",
+    });
     const data = await response.json();
+    if (activeLab === "merchant" && response.status === 401) {
+      renderMerchantLogin(data);
+      return;
+    }
     if (!response.ok) throw new Error(data.error ?? "Scenario failed");
     if (data.surface === "BUYER_JOURNEY") renderJourney(data);
+    else if (data.surface === "MERCHANT_CONSOLE") renderMerchant(data);
     else if (data.surface === "MCP_CATALOG") renderMcp(data);
     else if (data.phase === 7) renderProtocol(data);
     else if (data.phase === 6) renderEvaluation(data);
@@ -86,6 +96,112 @@ runButton.addEventListener("click", async () => {
     runButton.disabled = false;
   }
 });
+
+function renderMerchantLogin(data) {
+  const demoEmail = data.demoCredentials?.email ?? "";
+  const demoPassword = data.demoCredentials?.password ?? "";
+  const demoExplanation = data.demoCredentials
+    ? "These published credentials exist only for the localhost product demonstration."
+    : "Enter the merchant credentials configured by the operator.";
+  result.innerHTML = `
+    <div class="merchant-login">
+      <div>
+        <p class="eyebrow">DURABLE MERCHANT IDENTITY</p>
+        <h2>Sign in before catalog data is loaded</h2>
+        <p>${escapeHtml(data.message)}</p>
+        <div class="claim-strip">
+          <span class="claim-token real">REAL LOCAL</span><span>PostgreSQL user, membership, and session</span>
+          <span class="claim-token modelled">DEMO ONLY</span><span>${escapeHtml(demoExplanation)}</span>
+        </div>
+      </div>
+      <form id="merchant-login-form" class="merchant-login-form">
+        <label>Email<input name="email" type="email" autocomplete="username" value="${escapeHtml(demoEmail)}" required /></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" value="${escapeHtml(demoPassword)}" minlength="12" required /></label>
+        <button type="submit">Create secure local session <span>→</span></button>
+        <p id="merchant-login-status">The raw session token will be stored only in an HttpOnly cookie.</p>
+      </form>
+    </div>`;
+  document
+    .querySelector("#merchant-login-form")
+    .addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const status = document.querySelector("#merchant-login-status");
+      status.textContent = "Checking the salted password digest…";
+      const response = await fetch("/api/merchant/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: form.get("email"),
+          password: form.get("password"),
+        }),
+      });
+      const payload = await response.json();
+      if (!response.ok) {
+        status.textContent = payload.message ?? "Sign-in failed safely.";
+        return;
+      }
+      status.textContent = "Session stored. Loading the scoped merchant catalog…";
+      runButton.click();
+    });
+}
+
+function renderMerchant(data) {
+  const summary = data.catalog.summary;
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">MERCHANT CONSOLE · SESSION SCOPED</p><h2>${escapeHtml(data.catalog.merchant.displayName)}</h2><p>Signed in as ${escapeHtml(data.identity.displayName)} · ${escapeHtml(data.identity.role)}. Merchant scope came from the durable session, not the request.</p></div>
+      <button id="merchant-logout" class="secondary-button">End session</button>
+    </div>
+    <div class="claim-strip">
+      <span class="claim-token real">REAL LOCAL</span><span>Products, imports, provenance, membership, and session in PostgreSQL</span>
+      <span class="claim-token modelled">DEMO IDENTITY</span><span>Local account and password</span>
+    </div>
+    <div class="merchant-summary">
+      <div><span>Products</span><strong>${summary.productCount}</strong></div>
+      <div><span>Provenance records</span><strong>${summary.fieldsWithProvenance}</strong></div>
+      <div><span>Confirmed imports</span><strong>${summary.confirmedImports}</strong></div>
+      <div><span>Pending AI reviews</span><strong>${summary.pendingEnrichments}</strong></div>
+    </div>
+    <div class="merchant-products">
+      ${data.catalog.products
+        .map(
+          (product) => `<article class="merchant-product">
+            <div class="merchant-product-head">
+              <div><span class="provenance-label">${escapeHtml(product.sku)} · ${escapeHtml(product.category)}</span><h3>${escapeHtml(product.displayName)}</h3><p>${escapeHtml(product.description)}</p></div>
+              <div class="merchant-price"><strong>${money(product.price)}</strong><span>${product.availableQuantity} in stock · price v${product.priceVersion}</span></div>
+            </div>
+            <div class="provenance-heading"><strong>Why these fields are trusted</strong><span>${product.provenance.length} durable source records</span></div>
+            <div class="provenance-grid">
+              ${product.provenance
+                .map(
+                  (source) => `<div class="provenance-item">
+                    <span>${escapeHtml(humanize(source.fieldName))}</span>
+                    <strong>${escapeHtml(displayValue(source.observedValue))}</strong>
+                    <small>${escapeHtml(source.sourceType)} · ${escapeHtml(source.sourceRef)} · ${escapeHtml(source.sourcePath)}</small>
+                    <code title="Full source digest">${escapeHtml(source.sourceDigest.slice(0, 12))}…</code>
+                  </div>`,
+                )
+                .join("")}
+            </div>
+          </article>`,
+        )
+        .join("")}
+    </div>
+    <article class="session-proof">
+      <div><span class="provenance-label">SESSION EVIDENCE</span><h3>Authority is server-derived</h3></div>
+      <div><span>Scope from session</span><strong>${data.identity.scopeFromSession ? "YES" : "NO"}</strong></div>
+      <div><span>Cookie</span><strong>${escapeHtml(data.authentication.browserCookie)}</strong></div>
+      <div><span>Raw token in JSON</span><strong>${data.authentication.rawSessionTokenReturnedInJson ? "YES" : "NO"}</strong></div>
+    </article>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
+  document.querySelector("#merchant-logout").addEventListener("click", async () => {
+    await fetch("/api/merchant/logout", { method: "POST" });
+    runButton.click();
+  });
+}
 
 function renderJourney(data) {
   result.innerHTML = `
@@ -174,6 +290,7 @@ function claimClass(claim) {
 function displayValue(value) {
   if (Array.isArray(value)) return value.join(", ");
   if (typeof value === "boolean") return value ? "YES" : "NO";
+  if (typeof value === "object" && value !== null) return JSON.stringify(value);
   return value ?? "—";
 }
 

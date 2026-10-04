@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { createDatabasePool } from "@conduit/infrastructure";
+import { MerchantAuthenticationError } from "@conduit/merchant-console";
 import { createUcpBusinessProfile } from "@conduit/protocol-adapters";
 
 import { agentScenarioNames, runAgentScenario } from "./agent-scenarios.js";
@@ -23,6 +24,11 @@ import {
 } from "./onboarding-scenarios.js";
 import type { OnboardingScenarioName } from "./onboarding-scenarios.js";
 import { createMcpDemoSurface } from "./mcp-demo-surface.js";
+import {
+  createMerchantDemoSurface,
+  defaultDemoMerchantPassword,
+  demoMerchantEmail,
+} from "./merchant-demo-surface.js";
 import { protocolScenarioNames, runProtocolScenario } from "./protocol-scenarios.js";
 import type { ProtocolScenarioName } from "./protocol-scenarios.js";
 import { runScenario, scenarioNames } from "./scenarios.js";
@@ -33,6 +39,8 @@ const publicDirectory = fileURLToPath(new URL("../public/", import.meta.url));
 const port = Number(process.env.PORT ?? "4310");
 const publicBaseUrl = process.env.PUBLIC_BASE_URL ?? `http://127.0.0.1:${String(port)}`;
 const mcpSurface = await createMcpDemoSurface(pool, publicBaseUrl);
+const merchantSurface = await createMerchantDemoSurface(pool);
+const merchantSessionCookie = "conduit_merchant_session";
 
 const server = createServer((request, response) => {
   void handleRequest(request, response);
@@ -59,6 +67,7 @@ async function handleRequest(
           evaluation: evaluationScenarioNames,
           protocol: [...protocolScenarioNames, "mcp-roundtrip"],
           journey: journeyScenarioNames,
+          merchant: ["catalog-provenance"],
         },
         phases: [
           {
@@ -94,7 +103,7 @@ async function handleRequest(
           {
             phase: 7,
             title: "Product and protocol surface",
-            adds: "Buyer journey, authenticated MCP, scoped UCP catalog",
+            adds: "Buyer journey, merchant sessions, authenticated MCP",
           },
         ],
       });
@@ -103,6 +112,49 @@ async function handleRequest(
     if (request.method === "GET" && url.pathname === "/.well-known/ucp") {
       response.setHeader("cache-control", "public, max-age=60");
       json(response, 200, createUcpBusinessProfile(publicBaseUrl));
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/merchant/login") {
+      if (!sameOrigin(request)) {
+        json(response, 403, { error: "Cross-origin login is not allowed" });
+        return;
+      }
+      const credentials = await readCredentials(request);
+      const session = await merchantSurface.login(
+        credentials.email,
+        credentials.password,
+      );
+      setMerchantSessionCookie(response, session.token);
+      json(response, 200, {
+        authenticated: true,
+        principal: publicMerchantPrincipal(session.principal),
+        rawSessionTokenReturnedInJson: false,
+      });
+      return;
+    }
+    if (request.method === "POST" && url.pathname === "/api/merchant/logout") {
+      if (!sameOrigin(request)) {
+        json(response, 403, { error: "Cross-origin logout is not allowed" });
+        return;
+      }
+      await merchantSurface.logout(readCookie(request, merchantSessionCookie));
+      clearMerchantSessionCookie(response);
+      json(response, 200, { authenticated: false });
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/merchant/session") {
+      const principal = await merchantSurface.session(
+        readCookie(request, merchantSessionCookie),
+      );
+      json(response, 200, publicMerchantPrincipal(principal));
+      return;
+    }
+    if (request.method === "GET" && url.pathname === "/api/merchant/catalog") {
+      json(
+        response,
+        200,
+        await merchantSurface.catalog(readCookie(request, merchantSessionCookie)),
+      );
       return;
     }
     if (url.pathname === "/mcp") {
@@ -193,6 +245,21 @@ async function handleRequest(
     }
     json(response, 405, { error: "Method not allowed" });
   } catch (error: unknown) {
+    if (error instanceof MerchantAuthenticationError) {
+      json(response, 401, {
+        error: error.code,
+        message: "Sign in with the local merchant demo account.",
+        ...(process.env.NODE_ENV !== "production" && !process.env.DEMO_MERCHANT_PASSWORD
+          ? {
+              demoCredentials: {
+                email: demoMerchantEmail,
+                password: defaultDemoMerchantPassword,
+              },
+            }
+          : {}),
+      });
+      return;
+    }
     const message = error instanceof Error ? error.message : "Unexpected error";
     json(response, 500, { error: message });
   }
@@ -227,4 +294,77 @@ function contentType(file: string): string {
   if (file.endsWith(".css")) return "text/css; charset=utf-8";
   if (file.endsWith(".js")) return "text/javascript; charset=utf-8";
   return "text/html; charset=utf-8";
+}
+
+async function readCredentials(
+  request: IncomingMessage,
+): Promise<{ readonly email: string; readonly password: string }> {
+  const chunks: Buffer[] = [];
+  let size = 0;
+  for await (const buffer of request as AsyncIterable<Buffer>) {
+    size += buffer.length;
+    if (size > 4096) throw new MerchantAuthenticationError();
+    chunks.push(buffer);
+  }
+  let value: unknown;
+  try {
+    value = JSON.parse(Buffer.concat(chunks).toString("utf8"));
+  } catch {
+    throw new MerchantAuthenticationError();
+  }
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("email" in value) ||
+    !("password" in value) ||
+    typeof value.email !== "string" ||
+    typeof value.password !== "string"
+  ) {
+    throw new MerchantAuthenticationError();
+  }
+  return { email: value.email, password: value.password };
+}
+
+function readCookie(request: IncomingMessage, name: string): string | undefined {
+  for (const part of (request.headers.cookie ?? "").split(";")) {
+    const [key, ...value] = part.trim().split("=");
+    if (key === name) return value.join("=") || undefined;
+  }
+  return undefined;
+}
+
+function setMerchantSessionCookie(response: ServerResponse, token: string): void {
+  const secure = new URL(publicBaseUrl).protocol === "https:" ? "; Secure" : "";
+  response.setHeader(
+    "set-cookie",
+    `${merchantSessionCookie}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800${secure}`,
+  );
+}
+
+function clearMerchantSessionCookie(response: ServerResponse): void {
+  response.setHeader(
+    "set-cookie",
+    `${merchantSessionCookie}=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0`,
+  );
+}
+
+function sameOrigin(request: IncomingMessage): boolean {
+  const origin = request.headers.origin;
+  return !origin || origin === new URL(publicBaseUrl).origin;
+}
+
+function publicMerchantPrincipal(principal: {
+  readonly displayName: string;
+  readonly email: string;
+  readonly merchantName: string;
+  readonly role: string;
+  readonly expiresAt: string;
+}) {
+  return {
+    displayName: principal.displayName,
+    email: principal.email,
+    merchantName: principal.merchantName,
+    role: principal.role,
+    expiresAt: principal.expiresAt,
+  };
 }

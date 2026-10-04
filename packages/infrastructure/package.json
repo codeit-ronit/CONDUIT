@@ -16,6 +16,7 @@
     "@conduit/application": "workspace:*",
     "@conduit/domain": "workspace:*",
     "@conduit/enforcement": "workspace:*",
+    "@conduit/merchant-console": "workspace:*",
     "@conduit/observability": "workspace:*",
     "@conduit/onboarding": "workspace:*",
     "pg": "8.23.1"

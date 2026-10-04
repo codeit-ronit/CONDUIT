@@ -871,6 +871,210 @@ h1 {
     700 18px ui-monospace,
     monospace;
 }
+.merchant-login {
+  min-height: 610px;
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 0.72fr);
+  gap: 48px;
+  align-items: center;
+}
+.merchant-login h2 {
+  margin: 0;
+  font-size: clamp(28px, 4vw, 46px);
+  line-height: 1.05;
+}
+.merchant-login > div > p:not(.eyebrow) {
+  color: var(--muted);
+  line-height: 1.6;
+}
+.merchant-login-form {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  border: 1px solid var(--line);
+  background: #0d120f;
+}
+.merchant-login-form label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.merchant-login-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #344039;
+  border-radius: 3px;
+  background: #080c0a;
+  color: var(--ink);
+  font:
+    13px ui-monospace,
+    monospace;
+}
+.merchant-login-form input:focus {
+  outline: 1px solid var(--lime);
+  border-color: var(--lime);
+}
+.merchant-login-form button,
+.secondary-button {
+  padding: 12px 16px;
+  border: 1px solid rgba(185, 244, 93, 0.42);
+  border-radius: 3px;
+  background: var(--lime);
+  color: #09100b;
+  cursor: pointer;
+  font-weight: 800;
+}
+.merchant-login-form p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.secondary-button {
+  align-self: flex-start;
+  background: transparent;
+  color: var(--lime);
+}
+.merchant-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 20px 0;
+}
+.merchant-summary > div {
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: #0d120f;
+}
+.merchant-summary span,
+.merchant-summary strong {
+  display: block;
+}
+.merchant-summary span {
+  color: var(--muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.merchant-summary strong {
+  margin-top: 8px;
+  color: var(--lime);
+  font:
+    700 24px ui-monospace,
+    monospace;
+}
+.merchant-products {
+  display: grid;
+  gap: 14px;
+}
+.merchant-product {
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.012);
+}
+.merchant-product-head,
+.provenance-heading,
+.session-proof {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+}
+.merchant-product h3 {
+  margin: 6px 0;
+}
+.merchant-product p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.merchant-price {
+  text-align: right;
+  white-space: nowrap;
+}
+.merchant-price strong,
+.merchant-price span {
+  display: block;
+}
+.merchant-price strong {
+  color: var(--lime);
+  font:
+    700 20px ui-monospace,
+    monospace;
+}
+.merchant-price span,
+.provenance-heading span {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10px;
+}
+.provenance-heading {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.provenance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  margin-top: 12px;
+}
+.provenance-item {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #253029;
+  background: #0d120f;
+}
+.provenance-item > * {
+  display: block;
+  overflow-wrap: anywhere;
+}
+.provenance-item > span {
+  color: var(--cyan);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.provenance-item > strong {
+  margin-top: 6px;
+  color: #dce5dd;
+  font:
+    10px/1.45 ui-monospace,
+    monospace;
+}
+.provenance-item small,
+.provenance-item code {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.4;
+}
+.session-proof {
+  align-items: center;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid rgba(120, 220, 232, 0.3);
+  background: rgba(120, 220, 232, 0.05);
+}
+.session-proof h3 {
+  margin: 5px 0 0;
+}
+.session-proof div > span,
+.session-proof div > strong {
+  display: block;
+}
+.session-proof div > span:not(.provenance-label) {
+  color: var(--muted);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.session-proof div > strong {
+  margin-top: 5px;
+  font:
+    10px ui-monospace,
+    monospace;
+}
 .journey-timeline {
   margin: 20px 0;
   border: 1px solid var(--line);
@@ -1092,6 +1296,14 @@ footer {
   .claim-strip {
     grid-template-columns: auto 1fr;
   }
+  .merchant-login {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+  .merchant-summary,
+  .provenance-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 620px) {
   main,
@@ -1143,8 +1355,18 @@ footer {
     display: none;
   }
   .journey-evidence,
-  .receipt-card {
+  .receipt-card,
+  .merchant-summary,
+  .provenance-grid {
     grid-template-columns: 1fr;
+  }
+  .merchant-product-head,
+  .provenance-heading,
+  .session-proof {
+    flex-direction: column;
+  }
+  .merchant-price {
+    text-align: left;
   }
   .receipt-check {
     display: none;
