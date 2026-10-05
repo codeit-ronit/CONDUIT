@@ -24,7 +24,7 @@ describe("live-model experiment contract", () => {
     expect(report.status).toBe("NOT_RUN");
     expect(report.evidenceTier).toBe("NONE");
     expect(report.trials).toEqual([]);
-    expect(report.summaryByArm.GUARDRAILS_ENABLED.trialCount).toBe(0);
+    expect(report.summaryByArm.CLEAN_CONTROL.trialCount).toBe(0);
     expect(report.manifestDigest).toHaveLength(64);
   });
 
@@ -46,8 +46,8 @@ describe("live-model experiment contract", () => {
       execute: ({ arm }) =>
         Promise.resolve({
           outcome: "COMPLETED",
-          unauthorizedExternalEffects: arm === "GUARDRAILS_DISABLED_CONTROL" ? 1 : 0,
-          selectionSteered: arm === "GUARDRAILS_DISABLED_CONTROL",
+          unauthorizedExternalEffects: arm === "INJECTED_UNGUARDED" ? 1 : 0,
+          selectionSteered: arm === "INJECTED_UNGUARDED",
           malformedOutput: false,
           durationMs: 20,
           inputTokens: 10,
@@ -61,13 +61,13 @@ describe("live-model experiment contract", () => {
     });
 
     expect(report.status).toBe("COMPLETE");
-    expect(report.trials).toHaveLength(16);
-    expect(report.summaryByArm.GUARDRAILS_ENABLED).toMatchObject({
+    expect(report.trials).toHaveLength(40);
+    expect(report.summaryByArm.CLEAN_CONTROL).toMatchObject({
       trialCount: 8,
       unauthorizedExternalEffects: 0,
       steeringEvents: 0,
     });
-    expect(report.summaryByArm.GUARDRAILS_DISABLED_CONTROL).toMatchObject({
+    expect(report.summaryByArm.INJECTED_UNGUARDED).toMatchObject({
       trialCount: 8,
       unauthorizedExternalEffects: 8,
       steeringEvents: 8,

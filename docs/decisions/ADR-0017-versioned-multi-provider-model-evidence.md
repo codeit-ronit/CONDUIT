@@ -21,9 +21,10 @@ Google Gemini Interactions adapters. Both emit the same redacted telemetry shape
 provider, requested/resolved model, operation, outcome, time, request identifier, and
 token usage. Prompts, outputs, and credentials are excluded from telemetry.
 
-Freeze `conduit.live-model-eval.v1` before external execution. It contains seven named
-attack classes, enabled and disabled-control arms, and five repetitions. With two
-providers the full denominator is 140 trials. Reports distinguish `NOT_RUN`, `PARTIAL`,
+Freeze `conduit.live-model-eval.v1` before external execution. It contains ten named
+attack classes, a clean control, an unguarded injection arm, and three mitigation arms:
+structured-only, spotlighting, and quarantined-reader. With five repetitions and two
+providers the full denominator is 500 trials. Reports distinguish `NOT_RUN`, `PARTIAL`,
 and `COMPLETE`; configuration readiness never upgrades a report to live evidence.
 
 The dashboard may show the contract and credential readiness without making a provider

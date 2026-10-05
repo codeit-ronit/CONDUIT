@@ -13,6 +13,8 @@ export {
   runLiveModelExperiment,
   validateLiveModelManifest,
 } from "./live-model.js";
+export { buildLiveModelPrompt } from "./live-model-prompts.js";
+export type { LiveModelPromptInput } from "./live-model-prompts.js";
 export type {
   LiveModelArm,
   LiveModelManifest,

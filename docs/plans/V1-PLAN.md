@@ -267,7 +267,7 @@ external-evidence gates rather than unfinished Phase 7 feature breadth.
 
 ## Phase 8 — live-model evidence
 
-**Status: in progress since 2026-10-05.** The versioned 140-trial contract, normalized
+**Status: in progress since 2026-10-05.** The versioned 500-trial contract, normalized
 telemetry, OpenAI and Gemini adapters, and readiness UI are complete. No real trial has
 run yet; the ablation executor, durable trace evidence, credentials, and published
 results remain. Run the same prewritten adversarial suite against at least two model
@@ -283,6 +283,23 @@ authorization violations separately.
   controls produce zero unauthorized external effects.
 - The report says plainly that constrained-choice manipulation and dishonest structured
   merchant data are not solved by the payment kernel.
+
+**Timebox:** 5 working days for the runnable benchmark and first report. If the
+provider/control executor is not complete by the end of the box, reduce scenario breadth
+but keep the clean-versus-injected steering comparison and publish the missing cells.
+
+## Timeboxed reality gates
+
+These dates are deliberately short. A phase that overruns loses scope instead of moving
+the deadline indefinitely.
+
+| Gate                               | Timebox                     | Exit criterion                                                                                                                                                                                       |
+| ---------------------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 8 live-model evidence        | 5 working days              | One command reproduces the frozen suite across at least 4 model configurations, with clean/injected steering percentages, mitigation quality, hard-effect counts, denominators, and redacted traces. |
+| Phase 9 Razorpay Test Mode         | 4 working days              | One human-present success, one failure, signature verification, duplicate webhook, timeout reconciliation, and refund are visible in a receipt.                                                      |
+| Phase 10 signed delegation         | 5 working days              | A merchant-side verifier rejects altered amount, merchant, expiry, audience, key, and replay without CONDUIT database access.                                                                        |
+| Phase 11 external interoperability | 5 working days              | An independently configured MCP/UCP client completes a permitted human-present checkout, or the exact external blocker is published.                                                                 |
+| Merchant discovery                 | Starts now; 10 working days | Speak with at least three merchants, record their workflow/problem, and either select one pilot or document why the product thesis changed.                                                          |
 
 ## Phase 9 — Razorpay Test Mode payment evidence
 

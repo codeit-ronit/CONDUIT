@@ -791,8 +791,8 @@ adapter for repeated, prewritten experiments across at least two model providers
   the same strict `BuyerModel` contract and bounded runtime.
 - Shared, redacted call telemetry for provider/model identity, outcome, latency, request
   ID, and token usage; prompts, outputs, and credentials are deliberately excluded.
-- The frozen `conduit.live-model-eval.v1` manifest: seven scenarios, two control arms,
-  five repetitions, and two required providers—140 planned trials.
+- The frozen `conduit.live-model-eval.v1` manifest: ten scenarios, five comparison and
+  mitigation arms, five repetitions, and two required providers—500 planned trials.
 - A provider-neutral report with `NOT_RUN`, `PARTIAL`, and `COMPLETE` states, scenario
   digest, exact denominators, separate steering/hard-effect counts, tokens, latency,
   failures, and measured cost where available.
@@ -821,7 +821,36 @@ adapter for repeated, prewritten experiments across at least two model providers
 
 ### Honest limit and next action
 
-No provider credential was present, so no real external model call or 140-trial report
+No provider credential was present, so no real external model call or 500-trial report
 was produced. Next, build the evaluation-only control-ablation executor and durable
 redacted trace store, then execute the frozen manifest against explicit OpenAI and
 Gemini model versions.
+
+## 2026-10-05 — Phase 8 slice 2: steering-focused ablation contract
+
+### What changed
+
+- Replaced the overly simple enabled/disabled pair with five measurable arms:
+  clean control, injected unguarded, structured-only, spotlighting, and
+  quarantined-reader.
+- Expanded the manifest to ten recognizable attack classes, including MCP tool
+  description poisoning, tool-schema rug-pulls, and PII exfiltration.
+- Added a prompt builder that makes each mitigation input visibly different while
+  remaining outside the authority and payment path.
+- Added AgentDojo as an external benchmark mapping only; no external benchmark run is
+  claimed until its harness and permission scope are implemented.
+- Added timeboxes and exit criteria for Phases 8–11 plus merchant discovery in the V1
+  plan.
+
+### Why
+
+Guardrails-on hard-effect counts alone are expected to be zero because deterministic
+code enforces them. The useful result is how often a clean catalog becomes steered by
+injected content, and how much each mitigation reduces that rate at what task-quality
+cost. The new contract makes that question reproducible before provider calls begin.
+
+### Evidence and limit
+
+The full check now passes 84 tests across 23 files, including arm-specific prompt
+tests. Real model calls, the dual-model quarantined reader, and the 500-trial evidence
+table remain the next implementation slice.
