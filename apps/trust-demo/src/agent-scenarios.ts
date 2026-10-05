@@ -1,6 +1,7 @@
 import {
   BoundedBuyerRuntime,
   FlawedBuyerModel,
+  GeminiInteractionsBuyerModel,
   OpenAIResponsesBuyerModel,
   ScriptedBuyerModel,
 } from "@conduit/agent-runtime";
@@ -33,6 +34,7 @@ export const agentScenarioNames = [
   "loop",
   "unsatisfiable",
   "live-model",
+  "live-gemini",
 ] as const;
 
 export type AgentScenarioName = (typeof agentScenarioNames)[number];
@@ -49,15 +51,23 @@ export async function runAgentScenario(pool: Pool, name: AgentScenarioName) {
   const world = await createAgentWorld(commerce, trust);
 
   if (
-    name === "live-model" &&
-    (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL)
+    (name === "live-model" &&
+      (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL)) ||
+    (name === "live-gemini" &&
+      (!process.env.GEMINI_API_KEY || !process.env.GEMINI_MODEL))
   ) {
     return {
       phase: 4,
       scenario: name,
       title: "Live model adapter",
       lesson:
-        "The real OpenAI adapter is installed but disabled until OPENAI_API_KEY and OPENAI_MODEL are configured.",
+        name === "live-gemini"
+          ? "The real Gemini adapter is installed but disabled until GEMINI_API_KEY and GEMINI_MODEL are configured."
+          : "The real OpenAI adapter is installed but disabled until OPENAI_API_KEY and OPENAI_MODEL are configured.",
+      requiredEnvironment:
+        name === "live-gemini"
+          ? ["GEMINI_API_KEY", "GEMINI_MODEL"]
+          : ["OPENAI_API_KEY", "OPENAI_MODEL"],
       availability: "NOT_CONFIGURED",
       claimLevel: "LIVE_MODEL",
       proposal: null,
@@ -161,6 +171,12 @@ function modelFor(name: AgentScenarioName): BuyerModel {
       model: process.env.OPENAI_MODEL ?? "",
     });
   }
+  if (name === "live-gemini") {
+    return new GeminiInteractionsBuyerModel({
+      apiKey: process.env.GEMINI_API_KEY ?? "",
+      model: process.env.GEMINI_MODEL ?? "",
+    });
+  }
   return new ScriptedBuyerModel();
 }
 
@@ -228,6 +244,7 @@ function title(name: AgentScenarioName): string {
     loop: "Repeated actions are stopped",
     unsatisfiable: "Impossible constraints stay intact",
     "live-model": "Live model, identical boundaries",
+    "live-gemini": "Live Gemini model, identical boundaries",
   }[name];
 }
 
@@ -244,5 +261,7 @@ function lesson(name: AgentScenarioName): string {
       "No candidate fits the confirmed budget, so the run refuses instead of silently spending more.",
     "live-model":
       "A real provider can replace the scripted strategy without gaining different permissions.",
+    "live-gemini":
+      "A second independent provider uses the same typed contract, permissions, and deterministic money boundary.",
   }[name];
 }

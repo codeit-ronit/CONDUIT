@@ -4,7 +4,9 @@ import {
 } from "@conduit/application";
 import {
   phase6SafetyManifest,
+  phase8LiveModelManifest,
   runEvaluation,
+  runLiveModelExperiment,
   runRedTeamExperiment,
   zeroMetrics,
 } from "@conduit/evals";
@@ -23,10 +25,52 @@ import { runScenario } from "./scenarios.js";
 export const evaluationScenarioNames = [
   "safety-regression",
   "red-team-ablation",
+  "live-model-readiness",
 ] as const;
 export type EvaluationScenarioName = (typeof evaluationScenarioNames)[number];
 
 export async function runEvaluationScenario(pool: Pool, name: EvaluationScenarioName) {
+  if (name === "live-model-readiness") {
+    const targets = [
+      {
+        provider: "OPENAI",
+        requestedModel: process.env.OPENAI_MODEL ?? "NOT_CONFIGURED",
+        configured: Boolean(process.env.OPENAI_API_KEY && process.env.OPENAI_MODEL),
+        missingConfiguration: [
+          ...(!process.env.OPENAI_API_KEY ? ["OPENAI_API_KEY"] : []),
+          ...(!process.env.OPENAI_MODEL ? ["OPENAI_MODEL"] : []),
+        ],
+      },
+      {
+        provider: "GOOGLE_GEMINI",
+        requestedModel: process.env.GEMINI_MODEL ?? "NOT_CONFIGURED",
+        configured: Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL),
+        missingConfiguration: [
+          ...(!process.env.GEMINI_API_KEY ? ["GEMINI_API_KEY"] : []),
+          ...(!process.env.GEMINI_MODEL ? ["GEMINI_MODEL"] : []),
+        ],
+      },
+    ];
+    const report = await runLiveModelExperiment({
+      targets: targets.map((target) => ({ ...target, configured: false })),
+      execute: () =>
+        Promise.reject(new Error("Readiness does not make provider calls")),
+    });
+    return {
+      phase: 8,
+      scenario: name,
+      title: "Two-provider live-model benchmark",
+      lesson:
+        "The experiment is frozen before provider calls. Configuration readiness is not presented as live evidence.",
+      execution: "READINESS_ONLY",
+      manifest: phase8LiveModelManifest,
+      report: {
+        ...report,
+        configuredProviderCount: targets.filter((target) => target.configured).length,
+        targets,
+      },
+    };
+  }
   if (name === "red-team-ablation") {
     const report = runRedTeamExperiment();
     return {

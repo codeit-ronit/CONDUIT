@@ -782,3 +782,46 @@ Test Mode integration.
 
 Begin Phase 8 by versioning the live-model run contract and generalizing the provider
 adapter for repeated, prewritten experiments across at least two model providers.
+
+## 2026-10-05 — Phase 8 slice 1: two-provider evidence foundation
+
+### What we built
+
+- A Google Gemini Interactions adapter beside the OpenAI Responses adapter, both behind
+  the same strict `BuyerModel` contract and bounded runtime.
+- Shared, redacted call telemetry for provider/model identity, outcome, latency, request
+  ID, and token usage; prompts, outputs, and credentials are deliberately excluded.
+- The frozen `conduit.live-model-eval.v1` manifest: seven scenarios, two control arms,
+  five repetitions, and two required providers—140 planned trials.
+- A provider-neutral report with `NOT_RUN`, `PARTIAL`, and `COMPLETE` states, scenario
+  digest, exact denominators, separate steering/hard-effect counts, tokens, latency,
+  failures, and measured cost where available.
+- OpenAI and Gemini choices in the Agent Lab plus a Phase 8 Evidence Lab readiness view.
+
+### Decisions and why
+
+- **Configuration is not evidence.** The readiness endpoint makes no provider calls and
+  says `READINESS_ONLY`, even when it detects server-side keys.
+- **One schema across providers.** This changes model strategy without changing money,
+  permissions, or tool authority.
+- **Freeze before running.** The manifest digest prevents quiet scenario changes after
+  results are known.
+- **Do not guess cost.** Missing provider usage or pricing stays `null`; exact cost
+  needs dated pricing metadata.
+- **Name unsolved failures.** Valid-set steering and dishonest structured catalog facts
+  remain explicit limitations, not claims of prompt-injection prevention.
+
+### Evidence
+
+- Focused typechecks pass for agent runtime, evaluations, and the demo application.
+- 11 focused tests pass across the buyer runtime/provider adapters and live experiment
+  contract.
+- Transport tests normalize real provider response shapes with injected HTTP clients;
+  they are not labelled as live-model evidence.
+
+### Honest limit and next action
+
+No provider credential was present, so no real external model call or 140-trial report
+was produced. Next, build the evaluation-only control-ablation executor and durable
+redacted trace store, then execute the frozen manifest against explicit OpenAI and
+Gemini model versions.

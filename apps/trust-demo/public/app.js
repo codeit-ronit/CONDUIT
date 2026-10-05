@@ -83,6 +83,7 @@ runButton.addEventListener("click", async () => {
     else if (data.surface === "UCP_CART_CHECKOUT") renderUcpShopping(data);
     else if (data.surface === "MERCHANT_CONSOLE") renderMerchant(data);
     else if (data.surface === "MCP_CATALOG") renderMcp(data);
+    else if (data.phase === 8) renderLiveModelReadiness(data);
     else if (data.phase === 7) renderProtocol(data);
     else if (data.phase === 6) renderEvaluation(data);
     else if (data.phase === 5) renderOnboarding(data);
@@ -622,7 +623,7 @@ function renderAgent(data) {
         <div><p class="eyebrow">LIVE ADAPTER</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
         <span class="outcome warn">SETUP NEEDED</span>
       </div>
-      <div class="result-grid"><article class="data-card gates"><h3>HOW TO ENABLE IT</h3><p class="gate-detail">Set <code>OPENAI_API_KEY</code> and <code>OPENAI_MODEL</code> in your local <code>.env</code>, then restart the demo. The key stays server-side.</p></article></div>`;
+      <div class="result-grid"><article class="data-card gates"><h3>HOW TO ENABLE IT</h3><p class="gate-detail">Set <code>${escapeHtml((data.requiredEnvironment ?? []).join("</code> and <code>"))}</code> in your local <code>.env</code>, then restart the demo. The key stays server-side.</p></article></div>`;
     return;
   }
   const run = data.run ?? {};
@@ -692,6 +693,54 @@ function agentOutcome(state) {
     return { label: "REQUIRE APPROVAL", className: "warn" };
   if (state === "REFUSED") return { label: "SAFE REFUSAL", className: "warn" };
   return { label: state ?? "FAILED", className: "deny" };
+}
+
+function renderLiveModelReadiness(data) {
+  const report = data.report;
+  const trials =
+    data.manifest.scenarios.length *
+    data.manifest.arms.length *
+    data.manifest.repetitions *
+    report.requiredProviderCount;
+  result.innerHTML = `
+    <div class="result-head">
+      <div><p class="eyebrow">PHASE 8 · LIVE-MODEL EVIDENCE</p><h2>${escapeHtml(data.title)}</h2><p>${escapeHtml(data.lesson)}</p></div>
+      <span class="outcome warn">${escapeHtml(data.execution)}</span>
+    </div>
+    <div class="claim-strip">
+      <span class="claim-token real">REAL CONTRACT</span><span>Frozen scenarios, repetitions, arms, digest, and telemetry schema</span>
+      <span class="claim-token modelled">NOT EVIDENCE YET</span><span>No provider call was made by this readiness view</span>
+    </div>
+    <div class="result-grid">
+      <article class="data-card">
+        <h3>EXPERIMENT DENOMINATOR</h3>
+        <div class="metric"><span>Providers required</span><strong>${report.requiredProviderCount}</strong></div>
+        <div class="metric"><span>Scenarios</span><strong>${data.manifest.scenarios.length}</strong></div>
+        <div class="metric"><span>Runs per arm</span><strong>${data.manifest.repetitions}</strong></div>
+        <div class="metric"><span>Total planned trials</span><strong>${trials}</strong></div>
+        <div class="metric"><span>Manifest digest</span><strong>${escapeHtml(shortHash(report.manifestDigest))}</strong></div>
+      </article>
+      <article class="data-card gates">
+        <h3>PROVIDER READINESS</h3>
+        ${report.targets
+          .map(
+            (target) =>
+              `<div class="call-card"><div class="call-top"><code>${escapeHtml(target.provider)}</code><span class="chip ${target.configured ? "allow" : "warn"}">${target.configured ? "CONFIGURED" : "NOT CONFIGURED"}</span></div><p class="call-reason">Model: ${escapeHtml(target.requestedModel)}</p><small>${escapeHtml(target.missingConfiguration.join(", ") || "Credentials stay server-side")}</small></div>`,
+          )
+          .join("")}
+      </article>
+      <article class="data-card gates">
+        <h3>ADVERSARIAL COVERAGE</h3>
+        ${data.manifest.scenarios.map((scenario) => `<div class="metric"><span>${escapeHtml(scenario.attackClass)}</span><strong>${escapeHtml(scenario.id)}</strong></div>`).join("")}
+      </article>
+      <article class="data-card">
+        <h3>HONEST LIMITS</h3>
+        <p class="gate-detail">The kernel can stop unauthorized effects. It cannot prove an allowed choice was unbiased or detect a merchant lie already stored as trusted structured data.</p>
+      </article>
+    </div>
+    <button class="raw-toggle">Show exact response JSON</button>
+    <pre class="raw hidden">${escapeHtml(JSON.stringify(data, null, 2))}</pre>`;
+  wireRawToggle();
 }
 
 function renderCommerce(data) {

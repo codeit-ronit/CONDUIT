@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   BoundedBuyerRuntime,
   FlawedBuyerModel,
+  GeminiInteractionsBuyerModel,
   OpenAIResponsesBuyerModel,
   ScriptedBuyerModel,
 } from "../src/index.js";
@@ -11,6 +12,7 @@ import type {
   CartView,
   CommitToolResult,
   IntentRequest,
+  ModelCallTelemetry,
 } from "../src/index.js";
 
 const merchantId = "018f47a6-d879-7d3a-9f5a-96a73f0e11a2";
@@ -173,6 +175,7 @@ describe("bounded buyer runtime", () => {
   });
 
   it("runs the same contract through the live adapter with a mocked transport", async () => {
+    const telemetry: ModelCallTelemetry[] = [];
     const responses = [
       {
         schemaVersion: "buyer-intent-v1",
@@ -203,10 +206,21 @@ describe("bounded buyer runtime", () => {
     const fakeFetch: typeof fetch = () => {
       const output = responses.shift();
       return Promise.resolve(
-        new Response(JSON.stringify({ output_text: JSON.stringify(output) }), {
-          status: 200,
-          headers: { "content-type": "application/json" },
-        }),
+        new Response(
+          JSON.stringify({
+            id: "resp_test",
+            model: "resolved-test-model",
+            output_text: JSON.stringify(output),
+            usage: { input_tokens: 10, output_tokens: 5, total_tokens: 15 },
+          }),
+          {
+            status: 200,
+            headers: {
+              "content-type": "application/json",
+              "x-request-id": "request_test",
+            },
+          },
+        ),
       );
     };
     const tools = new FakeTools();
@@ -215,11 +229,72 @@ describe("bounded buyer runtime", () => {
         apiKey: "test-key",
         model: "test-model",
         fetchImplementation: fakeFetch,
+        observe: (event) => telemetry.push(event),
       }),
       tools,
     );
     const proposal = await runtime.proposeIntent(request);
     const result = await runtime.runConfirmed(proposal, proposal.fingerprint);
     expect(result.state).toBe("SUCCEEDED");
+    expect(telemetry).toHaveLength(3);
+    expect(telemetry[0]).toMatchObject({
+      provider: "OPENAI",
+      requestedModel: "test-model",
+      resolvedModel: "resolved-test-model",
+      providerRequestId: "request_test",
+      status: "COMPLETED",
+      usage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 },
+    });
+  });
+
+  it("uses Gemini structured output without changing the buyer contract", async () => {
+    const telemetry: ModelCallTelemetry[] = [];
+    let sentBody: unknown;
+    const fakeFetch: typeof fetch = (_input, init) => {
+      if (typeof init?.body !== "string") throw new Error("Expected JSON body");
+      sentBody = JSON.parse(init.body) as unknown;
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            interaction_id: "interaction_test",
+            model: "gemini-resolved",
+            output_text: JSON.stringify({
+              schemaVersion: "buyer-intent-v1",
+              merchantId,
+              currency: "INR",
+              maximumMinorUnits: "80000",
+              category: "dinner",
+              quantity: 2,
+              excludedTerms: ["beef"],
+              requiredAttributes: { vegetarian: "true" },
+              summary: "Two safe vegetarian dinners.",
+            }),
+            usage: { input_tokens: 11, output_tokens: 7, total_tokens: 18 },
+          }),
+          { status: 200, headers: { "content-type": "application/json" } },
+        ),
+      );
+    };
+    const model = new GeminiInteractionsBuyerModel({
+      apiKey: "test-key",
+      model: "gemini-test",
+      fetchImplementation: fakeFetch,
+      observe: (event) => telemetry.push(event),
+    });
+
+    const proposal = await model.proposeIntent(request);
+
+    expect(proposal).toMatchObject({ maximumMinorUnits: "80000" });
+    expect(sentBody).toMatchObject({
+      model: "gemini-test",
+      store: false,
+      response_format: { type: "text", mime_type: "application/json" },
+    });
+    expect(telemetry[0]).toMatchObject({
+      provider: "GOOGLE_GEMINI",
+      providerRequestId: "interaction_test",
+      status: "COMPLETED",
+      usage: { inputTokens: 11, outputTokens: 7, totalTokens: 18 },
+    });
   });
 });

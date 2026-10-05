@@ -7,6 +7,24 @@ export {
 } from "./grader.js";
 export { phase6SafetyManifest } from "./manifest.js";
 export { runRedTeamExperiment } from "./red-team.js";
+export {
+  liveModelManifestVersion,
+  phase8LiveModelManifest,
+  runLiveModelExperiment,
+  validateLiveModelManifest,
+} from "./live-model.js";
+export type {
+  LiveModelArm,
+  LiveModelManifest,
+  LiveModelReport,
+  LiveModelRunStatus,
+  LiveModelScenario,
+  LiveModelSummary,
+  LiveModelTarget,
+  LiveModelTrial,
+  LiveModelTrialExecutor,
+  LiveModelTrialObservation,
+} from "./live-model.js";
 export type {
   AttackResult,
   RedTeamControl,

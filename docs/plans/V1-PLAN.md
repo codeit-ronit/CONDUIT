@@ -267,8 +267,11 @@ external-evidence gates rather than unfinished Phase 7 feature breadth.
 
 ## Phase 8 — live-model evidence
 
-**Status: planned.** Run the same prewritten adversarial suite against at least two
-model families from two providers. Preserve raw, redacted traces and report repeated
+**Status: in progress since 2026-10-05.** The versioned 140-trial contract, normalized
+telemetry, OpenAI and Gemini adapters, and readiness UI are complete. No real trial has
+run yet; the ablation executor, durable trace evidence, credentials, and published
+results remain. Run the same prewritten adversarial suite against at least two model
+families from two providers. Preserve raw, redacted traces and report repeated
 guardrails-on/off results, cost, latency, malformed output, selection steering, and hard
 authorization violations separately.
 

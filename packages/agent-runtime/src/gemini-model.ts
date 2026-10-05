@@ -11,7 +11,7 @@ import type {
 import { intentPrompt, nextActionPrompt } from "./model-prompts.js";
 import type { BuyerModel, IntentRequest, ModelTurnContext } from "./types.js";
 
-export interface OpenAIResponsesModelOptions {
+export interface GeminiInteractionsModelOptions {
   readonly apiKey: string;
   readonly model: string;
   readonly endpoint?: string;
@@ -21,24 +21,25 @@ export interface OpenAIResponsesModelOptions {
   readonly now?: () => number;
 }
 
-/** Provider adapter only. The bounded runtime remains model-provider neutral. */
-export class OpenAIResponsesBuyerModel implements BuyerModel {
+/** Google Gemini Interactions adapter with the same BuyerModel authority as OpenAI. */
+export class GeminiInteractionsBuyerModel implements BuyerModel {
   public readonly id: string;
   public readonly claimLevel = "LIVE_MODEL" as const;
   readonly #endpoint: string;
   readonly #fetch: typeof fetch;
 
-  public constructor(private readonly options: OpenAIResponsesModelOptions) {
-    if (options.apiKey.length === 0) throw new Error("OpenAI API key is required");
-    if (options.model.length === 0) throw new Error("OpenAI model is required");
-    this.id = `openai:${options.model}`;
-    this.#endpoint = options.endpoint ?? "https://api.openai.com/v1/responses";
+  public constructor(private readonly options: GeminiInteractionsModelOptions) {
+    if (options.apiKey.length === 0) throw new Error("Gemini API key is required");
+    if (options.model.length === 0) throw new Error("Gemini model is required");
+    this.id = `google-gemini:${options.model}`;
+    this.#endpoint =
+      options.endpoint ??
+      "https://generativelanguage.googleapis.com/v1beta/interactions";
     this.#fetch = options.fetchImplementation ?? fetch;
   }
 
   public proposeIntent(input: IntentRequest): Promise<unknown> {
     return this.structured(
-      "shopping_intent",
       "PROPOSE_INTENT",
       shoppingIntentProposalSchema,
       intentPrompt(input),
@@ -46,16 +47,10 @@ export class OpenAIResponsesBuyerModel implements BuyerModel {
   }
 
   public nextAction(context: ModelTurnContext): Promise<unknown> {
-    return this.structured(
-      "buyer_action",
-      "NEXT_ACTION",
-      buyerActionSchema,
-      nextActionPrompt(context),
-    );
+    return this.structured("NEXT_ACTION", buyerActionSchema, nextActionPrompt(context));
   }
 
   private async structured<T>(
-    name: string,
     operation: ModelOperation,
     schema: z.ZodType<T>,
     input: string,
@@ -71,20 +66,17 @@ export class OpenAIResponsesBuyerModel implements BuyerModel {
       response = await this.#fetch(this.#endpoint, {
         method: "POST",
         headers: {
-          authorization: `Bearer ${this.options.apiKey}`,
           "content-type": "application/json",
+          "x-goog-api-key": this.options.apiKey,
         },
         body: JSON.stringify({
           model: this.options.model,
-          store: false,
           input,
-          text: {
-            format: {
-              type: "json_schema",
-              name,
-              strict: true,
-              schema: z.toJSONSchema(schema),
-            },
+          store: false,
+          response_format: {
+            type: "text",
+            mime_type: "application/json",
+            schema: z.toJSONSchema(schema),
           },
         }),
         signal: AbortSignal.timeout(this.options.timeoutMs ?? 30_000),
@@ -92,13 +84,11 @@ export class OpenAIResponsesBuyerModel implements BuyerModel {
       payload = await response.json();
       if (!response.ok) {
         errorCode = `HTTP_${String(response.status)}`;
-        throw new Error(`OpenAI Responses API returned ${String(response.status)}`);
+        throw new Error(`Gemini Interactions API returned ${String(response.status)}`);
       }
-      const text = extractOutputText(payload);
-      let parsed: unknown;
+      const text = extractGeminiText(payload);
       try {
-        parsed = JSON.parse(text) as unknown;
-        const result = schema.parse(parsed);
+        const result = schema.parse(JSON.parse(text) as unknown);
         status = "COMPLETED";
         return result;
       } catch (error: unknown) {
@@ -107,12 +97,12 @@ export class OpenAIResponsesBuyerModel implements BuyerModel {
         throw error;
       }
     } catch (error: unknown) {
-      status = classifyOpenAIFailure(status, error);
+      status = preserveInvalidOutput(status);
       errorCode ??= error instanceof Error ? error.name : "UNKNOWN_ERROR";
       throw error;
     } finally {
       this.options.observe?.({
-        provider: "OPENAI",
+        provider: "GOOGLE_GEMINI",
         requestedModel: this.options.model,
         resolvedModel: readString(payload, "model"),
         operation,
@@ -120,31 +110,44 @@ export class OpenAIResponsesBuyerModel implements BuyerModel {
         startedAt,
         durationMs: Math.max(0, now() - started),
         providerRequestId:
-          response?.headers.get("x-request-id") ?? readString(payload, "id"),
-        usage: readOpenAIUsage(payload),
+          response?.headers.get("x-request-id") ??
+          readString(payload, "interaction_id") ??
+          readString(payload, "id"),
+        usage: readGeminiUsage(payload),
         errorCode,
       });
     }
   }
 }
 
-function classifyOpenAIFailure(
-  current: ModelCallStatus,
-  error: unknown,
-): ModelCallStatus {
-  if (current === "INVALID_OUTPUT") return current;
-  const message = error instanceof Error ? error.message : "";
-  if (message.includes("refused")) return "REFUSED";
-  if (message.includes("incomplete")) return "INCOMPLETE";
-  return "PROVIDER_ERROR";
+function preserveInvalidOutput(current: ModelCallStatus): ModelCallStatus {
+  return current === "INVALID_OUTPUT" ? current : "PROVIDER_ERROR";
 }
 
-function readOpenAIUsage(payload: unknown): ModelTokenUsage {
-  if (!isRecord(payload) || !isRecord(payload.usage)) return emptyTokenUsage;
+function extractGeminiText(payload: unknown): string {
+  if (!isRecord(payload)) throw new Error("Gemini response was not an object");
+  if (typeof payload.output_text === "string") return payload.output_text;
+  if (
+    isRecord(payload.interaction) &&
+    typeof payload.interaction.output_text === "string"
+  )
+    return payload.interaction.output_text;
+  throw new Error("Gemini response had no structured text output");
+}
+
+function readGeminiUsage(payload: unknown): ModelTokenUsage {
+  if (!isRecord(payload)) return emptyTokenUsage;
+  const usage = isRecord(payload.usage) ? payload.usage : payload.usage_metadata;
+  if (!isRecord(usage)) return emptyTokenUsage;
+  const inputTokens =
+    readNumber(usage, "input_tokens") ?? readNumber(usage, "prompt_token_count");
+  const outputTokens =
+    readNumber(usage, "output_tokens") ?? readNumber(usage, "candidates_token_count");
   return {
-    inputTokens: readNumber(payload.usage, "input_tokens"),
-    outputTokens: readNumber(payload.usage, "output_tokens"),
-    totalTokens: readNumber(payload.usage, "total_tokens"),
+    inputTokens,
+    outputTokens,
+    totalTokens:
+      readNumber(usage, "total_tokens") ?? readNumber(usage, "total_token_count"),
   };
 }
 
@@ -154,25 +157,6 @@ function readString(value: unknown, key: string): string | null {
 
 function readNumber(value: unknown, key: string): number | null {
   return isRecord(value) && typeof value[key] === "number" ? value[key] : null;
-}
-
-function extractOutputText(payload: unknown): string {
-  if (!isRecord(payload)) throw new Error("OpenAI response was not an object");
-  if (payload.status === "incomplete")
-    throw new Error("OpenAI response was incomplete");
-  if (typeof payload.output_text === "string") return payload.output_text;
-  if (!Array.isArray(payload.output)) throw new Error("OpenAI response had no output");
-  for (const item of payload.output) {
-    if (!isRecord(item) || !Array.isArray(item.content)) continue;
-    for (const content of item.content) {
-      if (!isRecord(content)) continue;
-      if (content.type === "refusal")
-        throw new Error("OpenAI model refused the request");
-      if (content.type === "output_text" && typeof content.text === "string")
-        return content.text;
-    }
-  }
-  throw new Error("OpenAI response had no structured text output");
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
