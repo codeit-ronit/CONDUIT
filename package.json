@@ -26,6 +26,7 @@
     "demo:commerce": "dotenv -e .env -- pnpm --filter @conduit/walking-skeleton demo",
     "demo:web": "dotenv -e .env -- pnpm --filter @conduit/trust-demo start",
     "eval:safety": "dotenv -e .env -- pnpm --filter @conduit/trust-demo evaluate",
+    "eval:live:pilot": "dotenv -e .env -- pnpm --filter @conduit/trust-demo pilot",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",

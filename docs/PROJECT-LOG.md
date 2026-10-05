@@ -859,6 +859,16 @@ that free-provider compatibility and account access must be measured as part of 
 The next action is to resolve Gemini project access and Mistral quota, then run a tiny
 two-repetition pilot before attempting the full 500-cell matrix.
 
+### Pilot run
+
+The bounded pilot was executed with `pnpm eval:live:pilot` using the frozen arm
+contract, two hard-effect scenarios, and two repetitions: 40 trials across the two
+configured providers. Gemini failed all calls with HTTP 403 project access denial;
+Mistral failed all calls with HTTP 429 quota/rate limiting. There were zero tool calls
+and zero unauthorized effects, but also zero valid model completions. The pilot
+therefore proves provider-readiness handling and fail-closed behavior only; it is not a
+model robustness result and does not measure steering.
+
 ## 2026-10-05 — Phase 8 slice 2: steering-focused ablation contract
 
 ### What changed
@@ -883,6 +893,7 @@ cost. The new contract makes that question reproducible before provider calls be
 
 ### Evidence and limit
 
-The full check now passes 84 tests across 23 files, including arm-specific prompt tests.
-Real model calls, the dual-model quarantined reader, and the 500-trial evidence table
-remain the next implementation slice.
+The full check now passes 85 tests across 23 files, including arm-specific prompt and
+free-provider transport tests. Real successful model completions, the dual-model
+quarantined reader, and the 500-trial evidence table remain the next implementation
+slice.

@@ -7,6 +7,7 @@
     "build": "tsc -p tsconfig.build.json",
     "dev": "tsx watch src/server.ts",
     "evaluate": "tsx src/evaluate.ts",
+    "pilot": "tsx src/live-model-pilot.ts",
     "start": "tsx src/server.ts",
     "typecheck": "tsc"
   },
