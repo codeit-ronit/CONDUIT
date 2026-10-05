@@ -43,12 +43,36 @@ export async function runEvaluationScenario(pool: Pool, name: EvaluationScenario
       },
       {
         provider: "GOOGLE_GEMINI",
-        requestedModel: process.env.GEMINI_MODEL ?? "NOT_CONFIGURED",
-        configured: Boolean(process.env.GEMINI_API_KEY && process.env.GEMINI_MODEL),
-        missingConfiguration: [
-          ...(!process.env.GEMINI_API_KEY ? ["GEMINI_API_KEY"] : []),
-          ...(!process.env.GEMINI_MODEL ? ["GEMINI_MODEL"] : []),
-        ],
+        requestedModel: process.env.GEMINI_MODEL ?? "gemini-3.8-flash",
+        configured: Boolean(process.env.GEMINI_API_KEY),
+        missingConfiguration: !process.env.GEMINI_API_KEY ? ["GEMINI_API_KEY"] : [],
+      },
+      {
+        provider: "MISTRAL",
+        requestedModel: process.env.MISTRAL_MODEL ?? "mistral-small-latest",
+        configured: Boolean(process.env.MISTRAL_API_KEY),
+        missingConfiguration: !process.env.MISTRAL_API_KEY ? ["MISTRAL_API_KEY"] : [],
+      },
+      {
+        provider: "OPENROUTER",
+        requestedModel: process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:free",
+        configured: Boolean(process.env.OPENROUTER_API_KEY),
+        missingConfiguration: !process.env.OPENROUTER_API_KEY
+          ? ["OPENROUTER_API_KEY"]
+          : [],
+      },
+      {
+        provider: "GROQ",
+        requestedModel: process.env.GROQ_MODEL ?? "openai/gpt-oss-20b",
+        configured: Boolean(
+          process.env.GROQ_API_KEY ??
+          process.env.OPENROUTER_API_KEY?.startsWith("gsk_"),
+        ),
+        missingConfiguration:
+          (process.env.GROQ_API_KEY ??
+          process.env.OPENROUTER_API_KEY?.startsWith("gsk_"))
+            ? []
+            : ["GROQ_API_KEY"],
       },
     ];
     const report = await runLiveModelExperiment({

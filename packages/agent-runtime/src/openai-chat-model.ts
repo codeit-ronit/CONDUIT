@@ -5,36 +5,34 @@ import { emptyTokenUsage } from "./model-telemetry.js";
 import type {
   ModelCallStatus,
   ModelOperation,
+  ModelProvider,
   ModelTelemetryObserver,
   ModelTokenUsage,
 } from "./model-telemetry.js";
 import { intentPrompt, nextActionPrompt } from "./model-prompts.js";
 import type { BuyerModel, IntentRequest, ModelTurnContext } from "./types.js";
 
-export interface GeminiInteractionsModelOptions {
+export interface OpenAIChatModelOptions {
+  readonly provider: Exclude<ModelProvider, "OPENAI" | "GOOGLE_GEMINI">;
   readonly apiKey: string;
   readonly model: string;
-  readonly endpoint?: string;
+  readonly endpoint: string;
   readonly fetchImplementation?: typeof fetch;
   readonly observe?: ModelTelemetryObserver;
   readonly timeoutMs?: number;
   readonly now?: () => number;
+  readonly headers?: Readonly<Record<string, string>>;
 }
 
-/** Google Gemini Interactions adapter with the same BuyerModel authority as OpenAI. */
-export class GeminiInteractionsBuyerModel implements BuyerModel {
+/** Shared adapter for providers exposing the OpenAI-compatible Chat Completions API. */
+export class OpenAIChatBuyerModel implements BuyerModel {
   public readonly id: string;
   public readonly claimLevel = "LIVE_MODEL" as const;
-  readonly #endpoint: string;
   readonly #fetch: typeof fetch;
 
-  public constructor(private readonly options: GeminiInteractionsModelOptions) {
-    if (options.apiKey.length === 0) throw new Error("Gemini API key is required");
-    if (options.model.length === 0) throw new Error("Gemini model is required");
-    this.id = `google-gemini:${options.model}`;
-    this.#endpoint =
-      options.endpoint ??
-      `https://generativelanguage.googleapis.com/v1beta/models/${options.model}:generateContent`;
+  public constructor(private readonly options: OpenAIChatModelOptions) {
+    if (options.model.length === 0) throw new Error("Chat model is required");
+    this.id = `${options.provider.toLowerCase()}:${options.model}`;
     this.#fetch = options.fetchImplementation ?? fetch;
   }
 
@@ -63,24 +61,24 @@ export class GeminiInteractionsBuyerModel implements BuyerModel {
     let status: ModelCallStatus = "PROVIDER_ERROR";
     let errorCode: string | null = null;
     try {
-      response = await this.#fetch(this.#endpoint, {
+      response = await this.#fetch(this.options.endpoint, {
         method: "POST",
         headers: {
+          ...(this.options.apiKey
+            ? { authorization: `Bearer ${this.options.apiKey}` }
+            : {}),
           "content-type": "application/json",
-          "x-goog-api-key": this.options.apiKey,
+          ...this.options.headers,
         },
         body: JSON.stringify({
-          contents: [
+          model: this.options.model,
+          messages: [
             {
               role: "user",
-              parts: [
-                {
-                  text: `${input}\nReturn only JSON matching this schema: ${JSON.stringify(z.toJSONSchema(schema))}`,
-                },
-              ],
+              content: `${input}\nReturn only a JSON object matching this schema. Do not include $schema or any fields not required by the schema:\n${JSON.stringify(withoutSchemaMeta(z.toJSONSchema(schema)))}`,
             },
           ],
-          generationConfig: { responseMimeType: "application/json" },
+          response_format: { type: "json_object" },
         }),
         signal: AbortSignal.timeout(this.options.timeoutMs ?? 30_000),
       });
@@ -88,10 +86,10 @@ export class GeminiInteractionsBuyerModel implements BuyerModel {
       if (!response.ok) {
         errorCode = `HTTP_${String(response.status)}`;
         throw new Error(
-          `Gemini generateContent API returned ${String(response.status)}: ${summarizeProviderError(payload)}`,
+          `${this.options.provider} Chat API returned ${String(response.status)}: ${summarizeProviderError(payload)}`,
         );
       }
-      const text = extractGeminiText(payload);
+      const text = extractChatText(payload);
       try {
         const result = schema.parse(JSON.parse(text) as unknown);
         status = "COMPLETED";
@@ -102,12 +100,11 @@ export class GeminiInteractionsBuyerModel implements BuyerModel {
         throw error;
       }
     } catch (error: unknown) {
-      status = preserveInvalidOutput(status);
       errorCode ??= error instanceof Error ? error.name : "UNKNOWN_ERROR";
       throw error;
     } finally {
       this.options.observe?.({
-        provider: "GOOGLE_GEMINI",
+        provider: this.options.provider,
         requestedModel: this.options.model,
         resolvedModel: readString(payload, "model"),
         operation,
@@ -115,68 +112,50 @@ export class GeminiInteractionsBuyerModel implements BuyerModel {
         startedAt,
         durationMs: Math.max(0, now() - started),
         providerRequestId:
-          response?.headers.get("x-request-id") ??
-          readString(payload, "interaction_id") ??
-          readString(payload, "id"),
-        usage: readGeminiUsage(payload),
+          response?.headers.get("x-request-id") ?? readString(payload, "id"),
+        usage: readUsage(payload),
         errorCode,
       });
     }
   }
 }
 
-function preserveInvalidOutput(current: ModelCallStatus): ModelCallStatus {
-  return current === "INVALID_OUTPUT" ? current : "PROVIDER_ERROR";
+function extractChatText(payload: unknown): string {
+  if (!isRecord(payload) || !Array.isArray(payload.choices))
+    throw new Error("Chat response had no choices");
+  const first: unknown = payload.choices[0] as unknown;
+  if (!isRecord(first) || !isRecord(first.message))
+    throw new Error("Chat response had no message");
+  if (typeof first.message.refusal === "string")
+    throw new Error("Chat model refused the request");
+  if (typeof first.message.content !== "string")
+    throw new Error("Chat response had no text content");
+  return first.message.content;
 }
 
-function extractGeminiText(payload: unknown): string {
-  if (!isRecord(payload)) throw new Error("Gemini response was not an object");
-  if (Array.isArray(payload.candidates)) {
-    const first: unknown = payload.candidates[0] as unknown;
-    if (
-      isRecord(first) &&
-      isRecord(first.content) &&
-      Array.isArray(first.content.parts)
-    ) {
-      for (const part of first.content.parts) {
-        if (isRecord(part) && typeof part.text === "string") return part.text;
-      }
-    }
-  }
-  if (typeof payload.output_text === "string") return payload.output_text;
-  if (
-    isRecord(payload.interaction) &&
-    typeof payload.interaction.output_text === "string"
-  )
-    return payload.interaction.output_text;
-  throw new Error("Gemini response had no structured text output");
-}
-
-function readGeminiUsage(payload: unknown): ModelTokenUsage {
-  if (!isRecord(payload)) return emptyTokenUsage;
-  const usage = isRecord(payload.usage) ? payload.usage : payload.usage_metadata;
-  if (!isRecord(usage)) return emptyTokenUsage;
-  const inputTokens =
-    readNumber(usage, "input_tokens") ?? readNumber(usage, "promptTokenCount");
-  const outputTokens =
-    readNumber(usage, "output_tokens") ?? readNumber(usage, "candidatesTokenCount");
+function readUsage(payload: unknown): ModelTokenUsage {
+  if (!isRecord(payload) || !isRecord(payload.usage)) return emptyTokenUsage;
   return {
-    inputTokens,
-    outputTokens,
-    totalTokens:
-      readNumber(usage, "total_tokens") ?? readNumber(usage, "totalTokenCount"),
+    inputTokens: readNumber(payload.usage, "prompt_tokens"),
+    outputTokens: readNumber(payload.usage, "completion_tokens"),
+    totalTokens: readNumber(payload.usage, "total_tokens"),
   };
+}
+
+function withoutSchemaMeta<T>(schema: T): T {
+  if (!isRecord(schema)) return schema;
+  const withoutMeta = { ...schema };
+  delete withoutMeta.$schema;
+  return withoutMeta;
 }
 
 function summarizeProviderError(payload: unknown): string {
   if (!isRecord(payload)) return "no provider details";
-  const message =
-    typeof payload.message === "string"
-      ? payload.message
-      : isRecord(payload.error) && typeof payload.error.message === "string"
-        ? payload.error.message
-        : "no provider details";
-  return message.slice(0, 240);
+  if (isRecord(payload.error) && typeof payload.error.message === "string")
+    return payload.error.message.slice(0, 240);
+  return typeof payload.message === "string"
+    ? payload.message.slice(0, 240)
+    : "no provider details";
 }
 
 function readString(value: unknown, key: string): string | null {

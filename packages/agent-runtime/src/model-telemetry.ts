@@ -1,4 +1,5 @@
-export type ModelProvider = "OPENAI" | "GOOGLE_GEMINI";
+export type ModelProvider =
+  "OPENAI" | "GOOGLE_GEMINI" | "MISTRAL" | "OPENROUTER" | "GROQ" | "OLLAMA";
 
 export type ModelOperation = "PROPOSE_INTENT" | "NEXT_ACTION";
 

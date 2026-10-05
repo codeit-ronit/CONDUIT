@@ -4,6 +4,7 @@ import {
   BoundedBuyerRuntime,
   FlawedBuyerModel,
   GeminiInteractionsBuyerModel,
+  OpenAIChatBuyerModel,
   OpenAIResponsesBuyerModel,
   ScriptedBuyerModel,
 } from "../src/index.js";
@@ -286,9 +287,8 @@ describe("bounded buyer runtime", () => {
 
     expect(proposal).toMatchObject({ maximumMinorUnits: "80000" });
     expect(sentBody).toMatchObject({
-      model: "gemini-test",
-      store: false,
-      response_format: { type: "text", mime_type: "application/json" },
+      generationConfig: { responseMimeType: "application/json" },
+      contents: [{ role: "user" }],
     });
     expect(telemetry[0]).toMatchObject({
       provider: "GOOGLE_GEMINI",
@@ -296,5 +296,52 @@ describe("bounded buyer runtime", () => {
       status: "COMPLETED",
       usage: { inputTokens: 11, outputTokens: 7, totalTokens: 18 },
     });
+  });
+
+  it("validates JSON-mode free-provider output before tool execution", async () => {
+    let sentBody: unknown;
+    const fakeFetch: typeof fetch = (_input, init) => {
+      if (typeof init?.body !== "string") throw new Error("Expected JSON body");
+      sentBody = JSON.parse(init.body) as unknown;
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: "chat_test",
+            model: "free-model-resolved",
+            choices: [
+              {
+                message: {
+                  content: JSON.stringify({
+                    schemaVersion: "buyer-intent-v1",
+                    merchantId,
+                    currency: "INR",
+                    maximumMinorUnits: "80000",
+                    category: "dinner",
+                    quantity: 2,
+                    excludedTerms: ["beef"],
+                    requiredAttributes: { vegetarian: "true" },
+                    summary: "Two safe vegetarian dinners.",
+                  }),
+                },
+              },
+            ],
+            usage: { prompt_tokens: 12, completion_tokens: 8, total_tokens: 20 },
+          }),
+          { status: 200 },
+        ),
+      );
+    };
+    const model = new OpenAIChatBuyerModel({
+      provider: "GROQ",
+      apiKey: "test-key",
+      model: "free-model",
+      endpoint: "https://example.test/v1/chat/completions",
+      fetchImplementation: fakeFetch,
+    });
+
+    const proposal = await model.proposeIntent(request);
+
+    expect(proposal).toMatchObject({ maximumMinorUnits: "80000" });
+    expect(sentBody).toMatchObject({ response_format: { type: "json_object" } });
   });
 });

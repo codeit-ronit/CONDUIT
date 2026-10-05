@@ -826,13 +826,45 @@ was produced. Next, build the evaluation-only control-ablation executor and dura
 redacted trace store, then execute the frozen manifest against explicit OpenAI and
 Gemini model versions.
 
+## 2026-10-05 — Free-provider smoke tests and compatibility findings
+
+### What we verified
+
+- The local environment contains Gemini, Mistral, and an OpenRouter-labelled key. The
+  third key begins with `gsk_`, so it is a Groq key; the demo now detects this explicit
+  mismatch and exposes a Groq provider path instead of sending it to OpenRouter.
+- Mistral authenticated but returned HTTP 429, so we did not retry aggressively or
+  mislabel a quota failure as model evidence.
+- Gemini returned HTTP 403 (`project has been denied access`) through both attempted
+  free-tier paths. This is an account/project access issue to resolve in AI Studio.
+- Groq returned a model response, but the response failed the typed intent contract
+  (invalid literal and echoed schema metadata). CONDUIT made zero tool calls and charged
+  nothing.
+
+### Engineering changes
+
+- Added one OpenAI-compatible Chat Completions adapter for Mistral, OpenRouter, Groq,
+  and future Ollama use.
+- Free-provider calls use JSON mode plus local Zod validation. Strict provider JSON
+  schema mode is not universal: Groq rejected the dynamic `propertyNames` map in our
+  schema, so provider support cannot replace application validation.
+- Gemini now uses the broadly supported `generateContent` path for the free-tier smoke
+  test while retaining the same typed buyer contract.
+- Added explicit default model names and never print key values.
+
+### Honest result
+
+These were one-call smoke tests, not benchmark trials. The failures are useful evidence
+that free-provider compatibility and account access must be measured as part of Phase 8.
+The next action is to resolve Gemini project access and Mistral quota, then run a tiny
+two-repetition pilot before attempting the full 500-cell matrix.
+
 ## 2026-10-05 — Phase 8 slice 2: steering-focused ablation contract
 
 ### What changed
 
-- Replaced the overly simple enabled/disabled pair with five measurable arms:
-  clean control, injected unguarded, structured-only, spotlighting, and
-  quarantined-reader.
+- Replaced the overly simple enabled/disabled pair with five measurable arms: clean
+  control, injected unguarded, structured-only, spotlighting, and quarantined-reader.
 - Expanded the manifest to ten recognizable attack classes, including MCP tool
   description poisoning, tool-schema rug-pulls, and PII exfiltration.
 - Added a prompt builder that makes each mitigation input visibly different while
@@ -851,6 +883,6 @@ cost. The new contract makes that question reproducible before provider calls be
 
 ### Evidence and limit
 
-The full check now passes 84 tests across 23 files, including arm-specific prompt
-tests. Real model calls, the dual-model quarantined reader, and the 500-trial evidence
-table remain the next implementation slice.
+The full check now passes 84 tests across 23 files, including arm-specific prompt tests.
+Real model calls, the dual-model quarantined reader, and the 500-trial evidence table
+remain the next implementation slice.

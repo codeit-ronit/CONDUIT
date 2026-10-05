@@ -10,6 +10,8 @@ export { OpenAIResponsesBuyerModel } from "./openai-model.js";
 export type { OpenAIResponsesModelOptions } from "./openai-model.js";
 export { GeminiInteractionsBuyerModel } from "./gemini-model.js";
 export type { GeminiInteractionsModelOptions } from "./gemini-model.js";
+export { OpenAIChatBuyerModel } from "./openai-chat-model.js";
+export type { OpenAIChatModelOptions } from "./openai-chat-model.js";
 export { emptyTokenUsage } from "./model-telemetry.js";
 export type {
   ModelCallStatus,

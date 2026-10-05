@@ -2,6 +2,7 @@ import {
   BoundedBuyerRuntime,
   FlawedBuyerModel,
   GeminiInteractionsBuyerModel,
+  OpenAIChatBuyerModel,
   OpenAIResponsesBuyerModel,
   ScriptedBuyerModel,
 } from "@conduit/agent-runtime";
@@ -35,6 +36,9 @@ export const agentScenarioNames = [
   "unsatisfiable",
   "live-model",
   "live-gemini",
+  "live-mistral",
+  "live-openrouter",
+  "live-groq",
 ] as const;
 
 export type AgentScenarioName = (typeof agentScenarioNames)[number];
@@ -53,8 +57,10 @@ export async function runAgentScenario(pool: Pool, name: AgentScenarioName) {
   if (
     (name === "live-model" &&
       (!process.env.OPENAI_API_KEY || !process.env.OPENAI_MODEL)) ||
-    (name === "live-gemini" &&
-      (!process.env.GEMINI_API_KEY || !process.env.GEMINI_MODEL))
+    (name === "live-gemini" && !process.env.GEMINI_API_KEY) ||
+    (name === "live-mistral" && !process.env.MISTRAL_API_KEY) ||
+    (name === "live-openrouter" && !process.env.OPENROUTER_API_KEY) ||
+    (name === "live-groq" && !groqApiKey())
   ) {
     return {
       phase: 4,
@@ -62,12 +68,24 @@ export async function runAgentScenario(pool: Pool, name: AgentScenarioName) {
       title: "Live model adapter",
       lesson:
         name === "live-gemini"
-          ? "The real Gemini adapter is installed but disabled until GEMINI_API_KEY and GEMINI_MODEL are configured."
-          : "The real OpenAI adapter is installed but disabled until OPENAI_API_KEY and OPENAI_MODEL are configured.",
+          ? "The real Gemini adapter is installed but disabled until GEMINI_API_KEY is configured."
+          : name === "live-mistral"
+            ? "The real Mistral adapter is installed but disabled until MISTRAL_API_KEY is configured."
+            : name === "live-openrouter"
+              ? "The OpenRouter adapter is installed but disabled until OPENROUTER_API_KEY is configured."
+              : name === "live-groq"
+                ? "The Groq adapter is installed but disabled until GROQ_API_KEY is configured."
+                : "The real OpenAI adapter is installed but disabled until OPENAI_API_KEY and OPENAI_MODEL are configured.",
       requiredEnvironment:
         name === "live-gemini"
-          ? ["GEMINI_API_KEY", "GEMINI_MODEL"]
-          : ["OPENAI_API_KEY", "OPENAI_MODEL"],
+          ? ["GEMINI_API_KEY"]
+          : name === "live-mistral"
+            ? ["MISTRAL_API_KEY"]
+            : name === "live-openrouter"
+              ? ["OPENROUTER_API_KEY"]
+              : name === "live-groq"
+                ? ["GROQ_API_KEY"]
+                : ["OPENAI_API_KEY", "OPENAI_MODEL"],
       availability: "NOT_CONFIGURED",
       claimLevel: "LIVE_MODEL",
       proposal: null,
@@ -174,7 +192,35 @@ function modelFor(name: AgentScenarioName): BuyerModel {
   if (name === "live-gemini") {
     return new GeminiInteractionsBuyerModel({
       apiKey: process.env.GEMINI_API_KEY ?? "",
-      model: process.env.GEMINI_MODEL ?? "",
+      model: process.env.GEMINI_MODEL ?? "gemini-3.8-flash",
+    });
+  }
+  if (name === "live-mistral") {
+    return new OpenAIChatBuyerModel({
+      provider: "MISTRAL",
+      apiKey: process.env.MISTRAL_API_KEY ?? "",
+      model: process.env.MISTRAL_MODEL ?? "mistral-small-latest",
+      endpoint: "https://api.mistral.ai/v1/chat/completions",
+    });
+  }
+  if (name === "live-openrouter") {
+    return new OpenAIChatBuyerModel({
+      provider: "OPENROUTER",
+      apiKey: process.env.OPENROUTER_API_KEY ?? "",
+      model: process.env.OPENROUTER_MODEL ?? "openai/gpt-oss-20b:free",
+      endpoint: "https://openrouter.ai/api/v1/chat/completions",
+      headers: {
+        "HTTP-Referer": "http://127.0.0.1:4310",
+        "X-Title": "CONDUIT Trust Lab",
+      },
+    });
+  }
+  if (name === "live-groq") {
+    return new OpenAIChatBuyerModel({
+      provider: "GROQ",
+      apiKey: groqApiKey() ?? "",
+      model: process.env.GROQ_MODEL ?? "openai/gpt-oss-20b",
+      endpoint: "https://api.groq.com/openai/v1/chat/completions",
     });
   }
   return new ScriptedBuyerModel();
@@ -245,6 +291,9 @@ function title(name: AgentScenarioName): string {
     unsatisfiable: "Impossible constraints stay intact",
     "live-model": "Live model, identical boundaries",
     "live-gemini": "Live Gemini model, identical boundaries",
+    "live-mistral": "Live Mistral model, identical boundaries",
+    "live-openrouter": "Live OpenRouter free model, identical boundaries",
+    "live-groq": "Live Groq model, identical boundaries",
   }[name];
 }
 
@@ -263,5 +312,20 @@ function lesson(name: AgentScenarioName): string {
       "A real provider can replace the scripted strategy without gaining different permissions.",
     "live-gemini":
       "A second independent provider uses the same typed contract, permissions, and deterministic money boundary.",
+    "live-mistral":
+      "Mistral's free API mode uses the same typed contract, permissions, and deterministic money boundary.",
+    "live-openrouter":
+      "OpenRouter's selected free model uses the same typed contract, permissions, and deterministic money boundary; the routed model is recorded.",
+    "live-groq":
+      "Groq's free-plan model uses the same typed contract, permissions, and deterministic money boundary.",
   }[name];
+}
+
+function groqApiKey(): string | undefined {
+  return (
+    process.env.GROQ_API_KEY ??
+    (process.env.OPENROUTER_API_KEY?.startsWith("gsk_")
+      ? process.env.OPENROUTER_API_KEY
+      : undefined)
+  );
 }
